@@ -5,14 +5,19 @@ description = "Middleware for tracking ASGI reqeusts with Matomo"
 authors = ["Kristoffer Andersson <kristoffer.andersson@gu.se>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "asgi_matomo", from = "src"}]
+packages = [{include = "asgi_matomo"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+asgiref = "^3.6.0"
+httpx = "^0.24.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.3.1"
 black = "^23.3.0"
+starlette = "^0.26.1"
+pytest-asyncio = "^0.21.0"
+asgi-lifespan = "^2.1.0"
 
 [build-system]
 requires = ["poetry-core"]
