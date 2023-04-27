@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "asgi-matomo"
+version = "0.1.0"
+description = "Middleware for tracking ASGI reqeusts with Matomo"
+authors = ["Kristoffer Andersson <kristoffer.andersson@gu.se>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "asgi_matomo", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.3.1"
+black = "^23.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
