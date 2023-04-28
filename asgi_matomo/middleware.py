@@ -1,16 +1,18 @@
 import logging
 import random
 import time
-import typing
-from typing import Any
-import urllib.parse
 import traceback
-
-from asgiref.typing import ASGI3Application, ASGIReceiveCallable, ASGISendCallable
-from asgiref.typing import HTTPScope
+import typing
+import urllib.parse
+from typing import Any
 
 import httpx
-
+from asgiref.typing import (
+    ASGI3Application,
+    ASGIReceiveCallable,
+    ASGISendCallable,
+    HTTPScope,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +21,7 @@ _T = typing.TypeVar("_T")
 
 
 class _DefaultLifespan:
-    def __init__(self, app: "Router"):
+    def __init__(self, app: "MatomoMiddleware"):
         self._app = app
 
     async def __aenter__(self) -> None:
@@ -106,13 +108,17 @@ class MatomoMiddleware:
         accept_lang = None
         for header, value in scope["headers"]:
             if header == b"x-forwarded-server":
-                server = value
+                server = value.decode("utf-8")
             elif header == b"user-agent":
                 user_agent = value
             elif header == b"accept_lang":
                 accept_lang = value
 
         if server is None:
+            if scope["server"] is None:
+                logger.error("'server' is not set in scope, skip tracking...")
+                await self.app(scope, receive, send)
+                return
             host, port = scope["server"]
             server = f"{host}:{port}" if port else host
 
@@ -130,7 +136,7 @@ class MatomoMiddleware:
             )
         )
 
-        cip = scope["client"][0]
+        cip = scope["client"][0] if scope["client"] else None
 
         start_time = time.perf_counter()
 
@@ -144,10 +150,13 @@ class MatomoMiddleware:
             params_that_require_token = {}
 
             if self.access_token:
-                params_that_require_token = {
-                    "token_auth": self.access_token,
-                    "cip": cip,
-                }
+                if cip is None:
+                    logger.error("'client' is not set in scope")
+                else:
+                    params_that_require_token = {
+                        "token_auth": self.access_token,
+                        "cip": cip,
+                    }
 
             tracking_dict = {
                 "idsite": self.idsite,
@@ -168,6 +177,9 @@ class MatomoMiddleware:
             tracking_url = f"{self.matomo_url}?{tracking_params}"
             logger.debug("Making tracking call", extra={"url": tracking_url})
             try:
-                tracking_response = await self.client.get(tracking_url)
+                if self.client is None:
+                    logger.error("self.client is not set, can't track request")
+                else:
+                    _tracking_response = await self.client.get(tracking_url)
             except httpx.HTTPError:
                 logger.exception("Error tracking view")

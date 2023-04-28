@@ -95,7 +95,7 @@ e2e-tests-w-coverage: clean-pyc
 
 .PHONY: integration-tests
 integration-tests: clean-pyc
-	${INVENV} pytest -vv tests/integration
+	${INVENV} pytest -vv tests
 
 .PHONY: unit-tests-w-coverage
 unit-tests-w-coverage: clean-pyc
@@ -107,15 +107,15 @@ integration-tests-w-coverage: clean-pyc
 
 .PHONY: lint
 lint:
-	${INVENV} ruff ${flags} karp-backend karp-lex-core
+	${INVENV} ruff ${flags} asgi_matomo tests
 
 .PHONY: serve-docs
 serve-docs:
-	cd docs/karp-backend-v6 && ${INVENV} mkdocs serve && cd -
+	cd docs && ${INVENV} mkdocs serve && cd -
 
 .PHONY: type-check
 type-check:
-	${INVENV} mypy --config-file mypy.ini -p karp
+	${INVENV} mypy --config-file mypy.ini -p asgi_matomo
 
 .PHONY: publish
 publish:

@@ -1,6 +1,6 @@
 # asgi-matomo
 [![Packaging status](https://img.shields.io/pypi/v/asgi-matomo?color=%2334D058&label=pypi%20package)](https://pypi.org/project/asgi-matomo)
-[![CI](https://github.com/spraakbanke/asgi/workflows/Tests/badge.svg)](https://github.com/fullonic/brotli-asgi/actions?query=workflow%3ATests)
+[![CI](https://github.com/spraakbanken/asgi-matomo/workflows/CI/badge.svg)](https://github.com/spraakbanken/asgi-matomo/actions?query=workflow%3ACI)
 
 Tracking requests with Matomo from ASGI apps.
 

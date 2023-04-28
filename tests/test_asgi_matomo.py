@@ -1,14 +1,13 @@
 from unittest import mock
 from urllib.parse import parse_qs, urlsplit
 
-from starlette.applications import Starlette
-from starlette.responses import PlainTextResponse, JSONResponse
-from starlette.exceptions import HTTPException
-from httpx import AsyncClient
-from asgi_lifespan import LifespanManager
-
 import pytest
 import pytest_asyncio
+from asgi_lifespan import LifespanManager
+from httpx import AsyncClient
+from starlette.applications import Starlette
+from starlette.exceptions import HTTPException
+from starlette.responses import JSONResponse, PlainTextResponse
 
 from asgi_matomo import MatomoMiddleware
 
