@@ -60,7 +60,7 @@ unit_test_dirs := tests
 e2e_test_dirs := tests
 all_test_dirs := tests
 
-default_cov := "--cov=src/asgi_matomo"
+default_cov := "--cov=asgi_matomo"
 cov_report := "term-missing"
 cov := ${default_cov}
 
