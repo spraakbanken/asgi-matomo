@@ -69,7 +69,7 @@ jobs:
       # Run tests and upload coverage
       #----------------------------------------------
       - name: Run tests for coverage
-        run: make cov_report=xml run-all-tests-w-coverage
+        run: make cov_report=xml all-tests-w-coverage
 
       - name: Upload coverage to Codecov
         if: matrix.task.report_coverage
