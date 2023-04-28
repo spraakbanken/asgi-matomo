@@ -89,3 +89,10 @@ app.add_middleware(
 - _custom extraction of tracked data_
 
 
+# Release Notes
+## Latest Changes
+
+## 0.1.0 - 2023-04-28
+
+- Initial release.
+
