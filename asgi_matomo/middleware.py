@@ -39,18 +39,16 @@ class MatomoMiddleware:
         *,
         matomo_url,
         idsite: int,
-        client: httpx.AsyncClient | None = None,
         access_token: str | None = None,
         assume_https: bool = True,
-        lifespan=None,
+        client: httpx.AsyncClient | None = None,
     ) -> None:
         self.app = app
         self.matomo_url = matomo_url
         self.idsite = idsite
         self.assume_https = assume_https
         self.access_token = access_token
-        if lifespan is None:
-            self.lifespan_context = _DefaultLifespan(self)
+        self.lifespan_context = _DefaultLifespan(self)
         self.client = client
 
     async def startup(self) -> None:
