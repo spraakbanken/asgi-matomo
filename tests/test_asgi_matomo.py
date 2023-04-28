@@ -1,3 +1,4 @@
+from typing import AsyncGenerator
 from unittest import mock
 from urllib.parse import parse_qs, urlsplit
 
@@ -68,7 +69,7 @@ def fixture_expected_q(settings: dict) -> dict:
 
 
 @pytest_asyncio.fixture(name="client")
-async def fixture_client(app: Starlette) -> AsyncClient:
+async def fixture_client(app: Starlette) -> AsyncGenerator[AsyncClient, None]:
     async with LifespanManager(app):
         async with AsyncClient(app=app, base_url="http://testserver") as client:
             yield client
