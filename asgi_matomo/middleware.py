@@ -180,6 +180,13 @@ class MatomoMiddleware:
                 if self.client is None:
                     logger.error("self.client is not set, can't track request")
                 else:
-                    _tracking_response = await self.client.get(tracking_url)
+                    tracking_response = await self.client.get(tracking_url)
+                    logger.debug(
+                        "tracking response",
+                        extra={
+                            "status": tracking_response.status_code,
+                            "content": tracking_response.text,
+                        },
+                    )
             except httpx.HTTPError:
                 logger.exception("Error tracking view")
