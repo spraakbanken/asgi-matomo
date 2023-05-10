@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "asgi-matomo"
-version = "0.1.2"
+version = "0.1.3"
 description = "Middleware for tracking ASGI reqeusts with Matomo"
 authors = ["Kristoffer Andersson <kristoffer.andersson@gu.se>"]
 license = "MIT"
