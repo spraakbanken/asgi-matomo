@@ -139,10 +139,9 @@ check-fmt:
 	${INVENV} black . --check
 
 part := "patch"
-project := "PLEASE, GIVE ME A PROJECT"
 
 bumpversion:
-	cd ${project} && make part=${part} bumpversion
+	${INVENV} bumpversion ${part}
 
 build:
-	cd ${project} && make build
+	poetry build
