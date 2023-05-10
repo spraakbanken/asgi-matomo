@@ -120,12 +120,20 @@ class MatomoMiddleware:
                 await self.app(scope, receive, send)
                 return
             host, port = scope["server"]
+            logger.debug("setting server from scope", extra={"host": host, "port": port})
             server = f"{host}:{port}" if port else host
 
         path = scope["path"]
         if root_path := scope.get("root_path"):
+            logger.debug("using root_path", extra={"root_path": root_path})
             path = f"{root_path}{path}"
 
+        logger.debug("building url", extra={
+            "server": server,
+            "path": path,
+            "user_agent": user_agent,
+            "accept_lang": accept_lang
+        })
         url = urllib.parse.urlunsplit(
             (
                 "https" if self.assume_https else str(scope["scheme"]),
