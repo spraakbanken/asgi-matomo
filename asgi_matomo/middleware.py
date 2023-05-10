@@ -159,14 +159,14 @@ class MatomoMiddleware:
 
         cip = scope["client"][0] if scope["client"] else None
 
-        start_time = time.perf_counter()
+        start_time_ns = time.perf_counter_ns()
 
         try:
             await self.app(scope, receive, send)
         except Exception:
             raise
         finally:
-            end_time = time.perf_counter()
+            end_time_ns = time.perf_counter_ns()
 
             params_that_require_token = {}
 
@@ -186,7 +186,7 @@ class MatomoMiddleware:
                 "rand": random.getrandbits(32),
                 "apiv": 1,
                 "ua": user_agent,
-                "gt_ms": end_time - start_time,
+                "gt_ms": (end_time_ns - start_time_ns) / 1000,
                 # "lang": accept_lang,
                 **params_that_require_token,
             }
