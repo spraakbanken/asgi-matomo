@@ -29,7 +29,6 @@ def fixture_settings() -> dict:
     return {"idsite": 1, "base_url": "https://testserver"}
 
 
-@pytest.fixture(name="app")
 def create_app(matomo_client, settings: dict) -> Starlette:
     app = Starlette()
 
@@ -77,6 +76,11 @@ def create_app(matomo_client, settings: dict) -> Starlette:
     app.add_route("/set/custom/var", custom_var)
     app.add_route("/baz", baz, methods=["POST"])
     return app
+
+
+@pytest.fixture(name="app")
+def fixture_app(matomo_client, settings: dict) -> Starlette:
+    return create_app(matomo_client, settings)
 
 
 @pytest.fixture(name="expected_q")
@@ -194,12 +198,10 @@ async def test_matomo_client_gets_called_on_post_baz(
     assert_query_string(str(matomo_client.get.await_args), expected_q)
 
 
-# @pytest.mark.asyncio
-# async def test_matomo_client_gets_called_on_get_bar(client: AsyncClient, matomo_client):
-#     try:
-#         response = await client.get("/bar")
-#     except ValueError:
-#         pass
-#     # assert response.status_code == 200
-
-#     matomo_client.get.assert_awaited_with("http://trackingserver?")
+@pytest.mark.asyncio
+async def test_real_async_client_is_created(settings: dict) -> None:
+    app = create_app(None, settings)
+    async with LifespanManager(app):
+        async with AsyncClient(app=app, base_url="http://testserver") as client:
+            response = await client.get("/health")
+            assert response.status_code == 200
