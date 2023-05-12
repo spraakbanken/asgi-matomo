@@ -88,6 +88,7 @@ def fixture_expected_q(settings: dict) -> dict:
         # "lang": ["None"]
         "rec": ["1"],
         "ua": ["python-httpx/0.24.0"],
+        "send_image": ["0"],
     }
 
 

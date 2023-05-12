@@ -202,6 +202,7 @@ class MatomoMiddleware:
                 "apiv": 1,
                 "ua": user_agent,
                 "gt_ms": (end_time_ns - start_time_ns) / 1000,
+                "send_image": 0,
                 # "lang": accept_lang,
                 **params_that_require_token,
             }
