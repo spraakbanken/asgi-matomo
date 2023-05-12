@@ -5,7 +5,12 @@ description = "Middleware for tracking ASGI reqeusts with Matomo"
 authors = ["Kristoffer Andersson <kristoffer.andersson@gu.se>"]
 license = "MIT"
 readme = "README.md"
+homepage = "https://spraakbanken.gu.se"
+repository = "https://github.com/spraakbanken/asgi-matomo"
 packages = [{include = "asgi_matomo"}]
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/spraakbanken/asgi-matomo/issues"
 
 [tool.poetry.dependencies]
 python = "^3.10"
