@@ -1,3 +1,4 @@
+import contextlib
 from typing import AsyncGenerator
 from unittest import mock
 from urllib.parse import parse_qs, urlsplit
@@ -36,13 +37,19 @@ def create_app(matomo_client, settings: dict) -> Starlette:
         client=matomo_client,
         matomo_url="http://trackingserver",
         idsite=settings["idsite"],
+        exclude_paths=["/health"],
+        exclude_patterns=[".*/old.*"],
     )
 
-    # @app.route("/foo")
     async def foo(request):
         return PlainTextResponse("foo")
 
-    # @app.route("/bar")
+    async def health(request):
+        return PlainTextResponse("ok")
+
+    async def old(request):
+        return PlainTextResponse("old")
+
     async def bar(request):
         raise HTTPException(status_code=400, detail="bar")
 
@@ -52,6 +59,10 @@ def create_app(matomo_client, settings: dict) -> Starlette:
 
     app.add_route("/foo", foo)
     app.add_route("/bar", bar)
+    app.add_route("/health", health)
+    app.add_route("/some/old/path", old)
+    app.add_route("/old/path", old)
+    app.add_route("/really/old", old)
     app.add_route("/baz", baz, methods=["POST"])
     return app
 
@@ -92,10 +103,8 @@ async def test_matomo_client_gets_called_on_get_foo(
 async def test_matomo_client_gets_called_on_get_bar(
     client: AsyncClient, matomo_client, expected_q: dict
 ):
-    try:
-        response = await client.get("/bar")
-    except ValueError:
-        pass
+    with contextlib.suppress(ValueError):
+        _response = await client.get("/bar")
     # assert response.status_code == 200
 
     matomo_client.get.assert_awaited()
@@ -103,6 +112,28 @@ async def test_matomo_client_gets_called_on_get_bar(
     expected_q["url"][0] += "/bar"
 
     assert_query_string(str(matomo_client.get.await_args), expected_q)
+
+
+@pytest.mark.asyncio
+async def test_matomo_client_doesnt_gets_called_on_get_health(
+    client: AsyncClient,
+    matomo_client,
+):
+    response = await client.get("/health")
+    assert response.status_code == 200
+
+    matomo_client.get.assert_not_awaited()
+
+
+@pytest.mark.parametrize("path", ["/some/old/path", "/old/path", "/really/old"])
+@pytest.mark.asyncio
+async def test_matomo_client_doesnt_gets_called_on_get_old(
+    client: AsyncClient, matomo_client, path: str
+):
+    response = await client.get(path)
+    assert response.status_code == 200
+
+    matomo_client.get.assert_not_awaited()
 
 
 def assert_query_string(url: str, expected_q: dict) -> None:

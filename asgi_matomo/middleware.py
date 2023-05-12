@@ -1,5 +1,6 @@
 import logging
 import random
+import re
 import time
 import traceback
 import typing
@@ -44,6 +45,8 @@ class MatomoMiddleware:
         access_token: str | None = None,
         assume_https: bool = True,
         client: httpx.AsyncClient | None = None,
+        exclude_paths: list[str] | None = None,
+        exclude_patterns: list[str] | None = None,
     ) -> None:
         self.app = app
         self.matomo_url = matomo_url
@@ -52,6 +55,10 @@ class MatomoMiddleware:
         self.access_token = access_token
         self.lifespan_context = _DefaultLifespan(self)
         self.client = client
+        self.exclude_paths = set(exclude_paths or [])
+        self.compiled_patterns = [
+            re.compile(pattern) for pattern in (exclude_patterns or [])
+        ]
 
     async def startup(self) -> None:
         if self.client is None:
@@ -78,7 +85,7 @@ class MatomoMiddleware:
                         raise RuntimeError(
                             'The server does not support "state" in the lifespan scope.'
                         )
-                    scope["state"].update(maybe_state)
+                    scope["state"].update(maybe_state)  # type: ignore
                 await send({"type": "lifespan.startup.complete"})
                 started = True
                 await receive()
@@ -134,6 +141,13 @@ class MatomoMiddleware:
             server = servers[0]
 
         path = scope["path"]
+        dont_track_this = False
+        if path in self.exclude_paths:
+            logger.debug("excluding path='%s'", path, extra={"path": path})
+            dont_track_this = True
+        elif any(pattern.match(path) for pattern in self.compiled_patterns):
+            logger.debug("excluding path='%s'", path, extra={"path": path})
+            dont_track_this = True
         if root_path := scope.get("root_path"):
             logger.debug("using root_path", extra={"root_path": root_path})
             path = f"{root_path}{path}"
@@ -196,18 +210,21 @@ class MatomoMiddleware:
 
             tracking_params = urllib.parse.urlencode(tracking_dict)
             tracking_url = f"{self.matomo_url}?{tracking_params}"
-            logger.debug("Making tracking call", extra={"url": tracking_url})
-            try:
-                if self.client is None:
-                    logger.error("self.client is not set, can't track request")
-                else:
-                    tracking_response = await self.client.get(tracking_url)
-                    logger.debug(
-                        "tracking response",
-                        extra={
-                            "status": tracking_response.status_code,
-                            "content": tracking_response.text,
-                        },
-                    )
-            except httpx.HTTPError:
-                logger.exception("Error tracking view")
+            if dont_track_this:
+                logger.debug("NOT tracking call", extra={"url": tracking_url})
+            else:
+                logger.debug("Making tracking call", extra={"url": tracking_url})
+                try:
+                    if self.client is None:
+                        logger.error("self.client is not set, can't track request")
+                    else:
+                        tracking_response = await self.client.get(tracking_url)
+                        logger.debug(
+                            "tracking response",
+                            extra={
+                                "status": tracking_response.status_code,
+                                "content": tracking_response.text,
+                            },
+                        )
+                except httpx.HTTPError:
+                    logger.exception("Error tracking view")
