@@ -225,10 +225,10 @@ class MatomoMiddleware:
             if accept_lang:
                 tracking_dict["lang"] = accept_lang
 
-            if "state" in scope and "asgi_matomo" in scope["state"]:
-                for field, value in scope["state"]["asgi_matomo"].items():
+            if "state" in scope and "asgi_matomo" in scope["state"]:  # type: ignore
+                for field, value in scope["state"]["asgi_matomo"].items():  # type: ignore
                     if field == "cvar":
-                        tracking_dict["cvar"].update(value)
+                        tracking_dict["cvar"].update(value)  # type: ignore
                     else:
                         tracking_dict[field] = value
 
