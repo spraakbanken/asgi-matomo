@@ -89,6 +89,7 @@ def fixture_expected_q(settings: dict) -> dict:
         "rec": ["1"],
         "ua": ["python-httpx/0.24.0"],
         "send_image": ["0"],
+        "cvar": ['{"http_status_code": 200, "http_method": "GET"}'],
     }
 
 
@@ -123,6 +124,7 @@ async def test_matomo_client_gets_called_on_get_bar(
     matomo_client.get.assert_awaited()
 
     expected_q["url"][0] += "/bar"
+    expected_q["cvar"][0] = expected_q["cvar"][0].replace("200", "400")
 
     assert_query_string(str(matomo_client.get.await_args), expected_q)
 
@@ -140,7 +142,9 @@ async def test_matomo_client_gets_called_on_get_custom_var(
     expected_q["url"][0] += "/set/custom/var"
     expected_q["e_a"] = ["Playing"]
     expected_q["pf_srv"] = ["123"]
-    expected_q["cvar"] = ['{"anything": "goes"}']
+    expected_q["cvar"] = [
+        '{"http_status_code": 200, "http_method": "GET", "anything": "goes"}'
+    ]
 
     assert_query_string(str(matomo_client.get.await_args), expected_q)
 
@@ -184,6 +188,7 @@ async def test_matomo_client_gets_called_on_post_baz(
     assert response.status_code == 200
 
     expected_q["url"][0] += "/baz"
+    expected_q["cvar"][0] = expected_q["cvar"][0].replace("GET", "POST")
     matomo_client.get.assert_awaited()
 
     assert_query_string(str(matomo_client.get.await_args), expected_q)

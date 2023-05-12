@@ -103,6 +103,16 @@ class MatomoMiddleware:
     async def __call__(
         self, scope: HTTPScope, receive: ASGIReceiveCallable, send: ASGISendCallable
     ) -> Any:
+        # locals inside the app function (send_wrapper) can't be assigned to,
+        # as the interpreter detects the assignment and thus creates a new
+        # local variable within that function, with that name.
+        instance = {"http_status_code": None}
+
+        def send_wrapper(response):
+            if response["type"] == "http.response.start":
+                instance["http_status_code"] = response["status"]
+            return send(response)
+
         if scope["type"] == "lifespan":
             await self.lifespan(scope, receive, send)
             return
@@ -149,6 +159,7 @@ class MatomoMiddleware:
         elif any(pattern.match(path) for pattern in self.compiled_patterns):
             logger.debug("excluding path='%s'", path, extra={"path": path})
             dont_track_this = True
+
         if root_path := scope.get("root_path"):
             logger.debug("using root_path", extra={"root_path": root_path})
             path = f"{root_path}{path}"
@@ -177,7 +188,7 @@ class MatomoMiddleware:
         start_time_ns = time.perf_counter_ns()
 
         try:
-            await self.app(scope, receive, send)
+            await self.app(scope, receive, send_wrapper)
         except Exception:
             raise
         finally:
@@ -203,17 +214,22 @@ class MatomoMiddleware:
                 "ua": user_agent,
                 "gt_ms": (end_time_ns - start_time_ns) / 1000,
                 "send_image": 0,
+                "cvar": {
+                    "http_status_code": instance["http_status_code"],
+                    "http_method": scope["method"],
+                },
                 # "lang": accept_lang,
                 **params_that_require_token,
             }
             if "state" in scope and "asgi_matomo" in scope["state"]:
                 for field, value in scope["state"]["asgi_matomo"].items():
-                    tracking_dict[field] = (
-                        json.dumps(value) if isinstance(value, dict) else value
-                    )
+                    if field == "cvar":
+                        tracking_dict["cvar"].update(value)
+                    else:
+                        tracking_dict[field] = value
             if accept_lang:
                 tracking_dict["lang"] = accept_lang
-
+            tracking_dict["cvar"] = json.dumps(tracking_dict["cvar"])
             tracking_params = urllib.parse.urlencode(tracking_dict)
             tracking_url = f"{self.matomo_url}?{tracking_params}"
             if dont_track_this:
