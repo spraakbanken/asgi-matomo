@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2023-05-12
+
+### Added
+
+- Exclude paths from tracking
+- Pass custom variables to middleware
+- Track status_code and method
+
+### Documentation
+
+- Update readme
+
+### Fixed
+
+- Use send_image=0
+
+### Internal
+
+- Add git-cliff config
+- Add more metadata
+- Add test that real client is created
+
 ## [0.1.4] - 2023-05-10
 
 ### Fixed
