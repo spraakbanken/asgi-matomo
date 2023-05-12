@@ -9,6 +9,7 @@ from asgi_lifespan import LifespanManager
 from httpx import AsyncClient
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
+from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse
 
 from asgi_matomo import MatomoMiddleware
@@ -50,6 +51,16 @@ def create_app(matomo_client, settings: dict) -> Starlette:
     async def old(request):
         return PlainTextResponse("old")
 
+    async def custom_var(request: Request):
+        if "state" not in request.scope:
+            request.scope["state"] = {}
+        request.scope["state"]["asgi_matomo"] = {
+            "e_a": "Playing",
+            "pf_srv": "123",
+            "cvar": {"anything": "goes"},
+        }
+        return PlainTextResponse("custom_var")
+
     async def bar(request):
         raise HTTPException(status_code=400, detail="bar")
 
@@ -63,6 +74,7 @@ def create_app(matomo_client, settings: dict) -> Starlette:
     app.add_route("/some/old/path", old)
     app.add_route("/old/path", old)
     app.add_route("/really/old", old)
+    app.add_route("/set/custom/var", custom_var)
     app.add_route("/baz", baz, methods=["POST"])
     return app
 
@@ -110,6 +122,24 @@ async def test_matomo_client_gets_called_on_get_bar(
     matomo_client.get.assert_awaited()
 
     expected_q["url"][0] += "/bar"
+
+    assert_query_string(str(matomo_client.get.await_args), expected_q)
+
+
+@pytest.mark.asyncio
+async def test_matomo_client_gets_called_on_get_custom_var(
+    client: AsyncClient, matomo_client, expected_q: dict
+):
+    with contextlib.suppress(ValueError):
+        _response = await client.get("/set/custom/var")
+    # assert response.status_code == 200
+
+    matomo_client.get.assert_awaited()
+
+    expected_q["url"][0] += "/set/custom/var"
+    expected_q["e_a"] = ["Playing"]
+    expected_q["pf_srv"] = ["123"]
+    expected_q["cvar"] = ['{"anything": "goes"}']
 
     assert_query_string(str(matomo_client.get.await_args), expected_q)
 

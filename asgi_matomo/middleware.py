@@ -1,3 +1,4 @@
+import json
 import logging
 import random
 import re
@@ -204,7 +205,11 @@ class MatomoMiddleware:
                 # "lang": accept_lang,
                 **params_that_require_token,
             }
-
+            if "state" in scope and "asgi_matomo" in scope["state"]:
+                for field, value in scope["state"]["asgi_matomo"].items():
+                    tracking_dict[field] = (
+                        json.dumps(value) if isinstance(value, dict) else value
+                    )
             if accept_lang:
                 tracking_dict["lang"] = accept_lang
 
