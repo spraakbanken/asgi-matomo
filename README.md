@@ -6,13 +6,43 @@
 
 Tracking requests with Matomo from ASGI apps.
 
-`MatomoMiddleware` adds tracking of all requests to Matomo to ASGI applications (Starlette, FastAPI, Quart, etc.).
+`MatomoMiddleware` adds tracking of all requests to Matomo to ASGI applications (Starlette, FastAPI, Quart, etc.). The intended usage is for api tracking (backends).
+
+**Note** If you serve HTML (directly or by templates), it is suggested to track those parts through Matomo's javascript tracking.
 
 **Installation**
 
 ```bash
 pip install asgi-matomo
 ```
+
+## What is tracked
+
+Currently this middleware tracks:
+- `url`
+- `ua`: user_agent
+- `gt_ms`: mesaured as the time before and after this middleware call next in the asgi stack.
+- `send_image=0` for performance issues
+- `cvar` with at least `http_status_code` and `http_method` set.
+- `lang` if `accept-lang` is set
+- `cip` client ip, **requires** `access_token` to be given.
+
+You can also pass variable to track by adding an `asgi_matomo`  dict in the `state` dict of the ASGI `scope`:
+```python
+scope = {
+  "state": {
+    "asgi_matomo": {
+      "e_a": "Playing",
+      "cvar": {
+        "your": "custom",
+        "data": "here",
+      }
+    }
+  }
+}
+```
+
+The keys of the `asgi_matomo` dict is expected to be valid parameter for the [Matomo HTTP Tracking API](https://developer.matomo.org/api-reference/tracking-api). `cvar` is serialized with the standard `json` lib.
 
 ## Examples
 
@@ -69,7 +99,8 @@ app.add_middleware(
   idsite=12345, # your service tracking id
   access_token="SECRETTOKEN",
   assume_https=True,
-  minimum_size=400,
+  exclude_paths=["/health"],
+  exclude_patterns=[".*/old.*"],
 )
 ```
 
@@ -79,6 +110,9 @@ app.add_middleware(
 - **(Required)** `idsite`: The tracking id for your service.
 - _(Optional)_ `access_token`: Access token for Matomo. If this is set `cip` is also tracked. Required for tracking some data.
 - _(Optional)_ `assume_https`: If `True`, set tracked url scheme to `https`, useful when running behind a proxy. Defaults to `True`.
+- _(Optional)_ `exclude_paths`: A list of paths to exclude, only excludes path that is equal to a path in this list. These are tried before `exclude_patterns`.
+- _(Optional)_ `exclude_patterns`: A list of regex patterns that are compiled, and then exclude a path from tracking if any pattern match.
+These are tried after `exclude_paths`.
 
 
 **Notes**:
@@ -86,14 +120,9 @@ app.add_middleware(
 - Currently only some parts [Matomo Tracking HTTP API](https://developer.matomo.org/api-reference/tracking-api) is supported.
 
 ## Ideas for further work:
-- _filtering tracked of urls_
-- _custom extraction of tracked data_
+- [x] _filtering tracked of urls_
+- [x] _custom extraction of tracked data_
 
 
-# Release Notes
-## Latest Changes
-
-## 0.1.0 - 2023-04-28
-
-- Initial release.
+This project keeps a [changelog](./CHANGELOG.md).
 

@@ -221,14 +221,17 @@ class MatomoMiddleware:
                 # "lang": accept_lang,
                 **params_that_require_token,
             }
+
+            if accept_lang:
+                tracking_dict["lang"] = accept_lang
+
             if "state" in scope and "asgi_matomo" in scope["state"]:
                 for field, value in scope["state"]["asgi_matomo"].items():
                     if field == "cvar":
                         tracking_dict["cvar"].update(value)
                     else:
                         tracking_dict[field] = value
-            if accept_lang:
-                tracking_dict["lang"] = accept_lang
+
             tracking_dict["cvar"] = json.dumps(tracking_dict["cvar"])
             tracking_params = urllib.parse.urlencode(tracking_dict)
             tracking_url = f"{self.matomo_url}?{tracking_params}"
