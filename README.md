@@ -137,4 +137,8 @@ This project keeps a [changelog](./CHANGELOG.md).
 ## Latest Changes
 
 
+## [0.3.0] - 2023-05-22
+### Added
+
+- Allow setting route-details
 
