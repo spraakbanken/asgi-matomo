@@ -145,3 +145,11 @@ bumpversion:
 
 build:
 	poetry build
+
+tests/requirements.txt: pyproject.toml
+	poetry export --without=main --with=dev --without-hashes --output=$@
+
+update-changelog:
+	git cliff --unreleased --prepend CHANGELOG.md
+
+prepare-release: tests/requirements.txt update-changelog
