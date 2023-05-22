@@ -148,7 +148,7 @@ build:
 
 .PHONY: tests/requirements.txt
 tests/requirements.txt: pyproject.toml
-	poetry export --without=main --with=dev --without-hashes --output=$@
+	poetry export --with=dev --without-hashes --output=$@
 
 update-changelog:
 	git cliff --unreleased --prepend CHANGELOG.md
