@@ -146,6 +146,7 @@ bumpversion:
 build:
 	poetry build
 
+.PHONY: tests/requirements.txt
 tests/requirements.txt: pyproject.toml
 	poetry export --without=main --with=dev --without-hashes --output=$@
 
