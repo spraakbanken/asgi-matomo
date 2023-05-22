@@ -101,6 +101,11 @@ app.add_middleware(
   assume_https=True,
   exclude_paths=["/health"],
   exclude_patterns=[".*/old.*"],
+  route_details={
+    "route": {
+      "action_name": "Name",
+    }
+  }
 )
 ```
 
@@ -110,9 +115,10 @@ app.add_middleware(
 - **(Required)** `idsite`: The tracking id for your service.
 - _(Optional)_ `access_token`: Access token for Matomo. If this is set `cip` is also tracked. Required for tracking some data.
 - _(Optional)_ `assume_https`: If `True`, set tracked url scheme to `https`, useful when running behind a proxy. Defaults to `True`.
-- _(Optional)_ `exclude_paths`: A list of paths to exclude, only excludes path that is equal to a path in this list. These are tried before `exclude_patterns`.
-- _(Optional)_ `exclude_patterns`: A list of regex patterns that are compiled, and then exclude a path from tracking if any pattern match.
+- _(Optional)_ `exclude_paths`: A list of paths to exclude, only excludes path that is equal to a path in this list. These are tried before `exclude_patterns`. Defaults to `None`.
+- _(Optional)_ `exclude_patterns`: A list of regex patterns that are compiled, and then exclude a path from tracking if any pattern match. Defaults to `None`.
 These are tried after `exclude_paths`.
+- _(Optional)_ `route_details`: A dict with custom route-specific tracking data. Defaults to `None`.
 
 
 **Notes**:

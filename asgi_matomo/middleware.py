@@ -48,6 +48,7 @@ class MatomoMiddleware:
         client: httpx.AsyncClient | None = None,
         exclude_paths: list[str] | None = None,
         exclude_patterns: list[str] | None = None,
+        route_details: dict[str, dict[str, str]] | None = None,
     ) -> None:
         self.app = app
         self.matomo_url = matomo_url
@@ -60,6 +61,7 @@ class MatomoMiddleware:
         self.compiled_patterns = [
             re.compile(pattern) for pattern in (exclude_patterns or [])
         ]
+        self.route_details = route_details or {}
 
     async def startup(self) -> None:
         if self.client is None:
@@ -121,22 +123,98 @@ class MatomoMiddleware:
             await self.app(scope, receive, send)
             return
 
+        path = scope["path"]
+        dont_track_this = False
+        if path in self.exclude_paths:
+            logger.debug("excluding path='%s'", path, extra={"path": path})
+            dont_track_this = True
+        elif any(pattern.match(path) for pattern in self.compiled_patterns):
+            logger.debug("excluding path='%s'", path, extra={"path": path})
+            dont_track_this = True
+
+        # Early exit if we don't track this path
+        if dont_track_this:
+            await self.app(scope, receive, send)
+            return
+
+        start_time_ns = time.perf_counter_ns()
+
+        try:
+            await self.app(scope, receive, send_wrapper)
+        except Exception:
+            raise
+        finally:
+            end_time_ns = time.perf_counter_ns()
+
+            tracking_dict = self._build_tracking_state(scope)
+            tracking_dict.update(
+                {
+                    "gt_ms": (end_time_ns - start_time_ns) / 1000,
+                    "cvar": {
+                        "http_status_code": instance["http_status_code"],
+                        "http_method": scope["method"],
+                    },
+                }
+            )
+
+            if "state" in scope and "asgi_matomo" in scope["state"]:  # type: ignore
+                for field, value in scope["state"]["asgi_matomo"].items():  # type: ignore
+                    if (
+                        field in tracking_dict
+                        and isinstance(tracking_dict[field], dict)
+                        and isinstance(value, dict)
+                    ):
+                        tracking_dict[field].update(value)  # type: ignore
+                    else:
+                        tracking_dict[field] = value
+
+            tracking_dict["cvar"] = json.dumps(tracking_dict["cvar"])
+            tracking_params = urllib.parse.urlencode(tracking_dict)
+            tracking_url = f"{self.matomo_url}?{tracking_params}"
+
+            logger.debug("Making tracking call", extra={"url": tracking_url})
+            try:
+                if self.client is None:
+                    logger.error("self.client is not set, can't track request")
+                else:
+                    tracking_response = await self.client.get(tracking_url)
+                    logger.debug(
+                        "tracking response",
+                        extra={
+                            "status": tracking_response.status_code,
+                            "content": tracking_response.text,
+                        },
+                    )
+                    if tracking_response.status_code >= 300:
+                        logger.error(
+                            "Tracking call failed (status_code=%d)",
+                            tracking_response.status_code,
+                            extra={
+                                "status_code": tracking_response.status_code,
+                                "text": tracking_response.text,
+                            },
+                        )
+            except httpx.HTTPError:
+                logger.exception("Error tracking view")
+
+    def _build_tracking_state(self, scope: HTTPScope) -> dict:
         server = None
         user_agent = None
         accept_lang = None
+        path = scope["path"]
+
         for header, value in scope["headers"]:
-            if header == b"x-forwarded-server":
-                server = value.decode("utf-8")
-            elif header == b"user-agent":
-                user_agent = value
-            elif header == b"accept_lang":
+            if header == b"accept_lang":
                 accept_lang = value
 
+            elif header == b"user-agent":
+                user_agent = value
+            elif header == b"x-forwarded-server":
+                server = value.decode("utf-8")
         if server is None:
             if scope["server"] is None:
                 logger.error("'server' is not set in scope, skip tracking...")
-                await self.app(scope, receive, send)
-                return
+                raise RuntimeError("'server' is not set in scope")
             host, port = scope["server"]
             logger.debug(
                 "setting server from scope", extra={"host": host, "port": port}
@@ -150,15 +228,6 @@ class MatomoMiddleware:
                 extra={"server-orig": server, "servers": servers},
             )
             server = servers[0]
-
-        path = scope["path"]
-        dont_track_this = False
-        if path in self.exclude_paths:
-            logger.debug("excluding path='%s'", path, extra={"path": path})
-            dont_track_this = True
-        elif any(pattern.match(path) for pattern in self.compiled_patterns):
-            logger.debug("excluding path='%s'", path, extra={"path": path})
-            dont_track_this = True
 
         if root_path := scope.get("root_path"):
             logger.debug("using root_path", extra={"root_path": root_path})
@@ -185,71 +254,22 @@ class MatomoMiddleware:
 
         cip = scope["client"][0] if scope["client"] else None
 
-        start_time_ns = time.perf_counter_ns()
+        tracking_state = {
+            "idsite": self.idsite,
+            "action_name": scope["path"],
+            "url": url,
+            "rec": 1,
+            "rand": random.getrandbits(32),
+            "apiv": 1,
+            "ua": user_agent,
+            "send_image": 0,
+        }
 
-        try:
-            await self.app(scope, receive, send_wrapper)
-        except Exception:
-            raise
-        finally:
-            end_time_ns = time.perf_counter_ns()
-
-            params_that_require_token = {}
-
-            if self.access_token:
-                if cip is None:
-                    logger.error("'client' is not set in scope")
-                else:
-                    params_that_require_token = {
-                        "token_auth": self.access_token,
-                        "cip": cip,
-                    }
-
-            tracking_dict = {
-                "idsite": self.idsite,
-                "url": url,
-                "rec": 1,
-                "rand": random.getrandbits(32),
-                "apiv": 1,
-                "ua": user_agent,
-                "gt_ms": (end_time_ns - start_time_ns) / 1000,
-                "send_image": 0,
-                "cvar": {
-                    "http_status_code": instance["http_status_code"],
-                    "http_method": scope["method"],
-                },
-                # "lang": accept_lang,
-                **params_that_require_token,
-            }
-
-            if accept_lang:
-                tracking_dict["lang"] = accept_lang
-
-            if "state" in scope and "asgi_matomo" in scope["state"]:  # type: ignore
-                for field, value in scope["state"]["asgi_matomo"].items():  # type: ignore
-                    if field == "cvar":
-                        tracking_dict["cvar"].update(value)  # type: ignore
-                    else:
-                        tracking_dict[field] = value
-
-            tracking_dict["cvar"] = json.dumps(tracking_dict["cvar"])
-            tracking_params = urllib.parse.urlencode(tracking_dict)
-            tracking_url = f"{self.matomo_url}?{tracking_params}"
-            if dont_track_this:
-                logger.debug("NOT tracking call", extra={"url": tracking_url})
-            else:
-                logger.debug("Making tracking call", extra={"url": tracking_url})
-                try:
-                    if self.client is None:
-                        logger.error("self.client is not set, can't track request")
-                    else:
-                        tracking_response = await self.client.get(tracking_url)
-                        logger.debug(
-                            "tracking response",
-                            extra={
-                                "status": tracking_response.status_code,
-                                "content": tracking_response.text,
-                            },
-                        )
-                except httpx.HTTPError:
-                    logger.exception("Error tracking view")
+        if scope["path"] in self.route_details:
+            tracking_state |= self.route_details[scope["path"]]
+        if self.access_token and cip:
+            tracking_state["token_auth"] = self.access_token
+            tracking_state["cip"] = cip
+        if accept_lang:
+            tracking_state["lang"] = accept_lang
+        return tracking_state

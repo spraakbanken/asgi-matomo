@@ -1,4 +1,5 @@
 import contextlib
+from dataclasses import dataclass
 from typing import AsyncGenerator
 from unittest import mock
 from urllib.parse import parse_qs, urlsplit
@@ -15,13 +16,21 @@ from starlette.responses import JSONResponse, PlainTextResponse
 from asgi_matomo import MatomoMiddleware
 
 
+@dataclass
+class MockResponse:
+    status_code: int
+    text: str = "bad response"
+
+
 def test_it_works() -> None:
     assert MatomoMiddleware is not None
 
 
 @pytest.fixture(name="matomo_client")
 def fixture_matomo_client():
-    return mock.AsyncMock(AsyncClient)
+    client = mock.AsyncMock(AsyncClient)
+    client.get = mock.AsyncMock(return_value=MockResponse(status_code=204))
+    return client
 
 
 @pytest.fixture(name="settings", scope="session")
@@ -39,6 +48,7 @@ def create_app(matomo_client, settings: dict) -> Starlette:
         idsite=settings["idsite"],
         exclude_paths=["/health"],
         exclude_patterns=[".*/old.*"],
+        route_details={"/foo2": {"action_name": "The real foo", "e_a": "fooing"}},
     )
 
     async def foo(request):
@@ -68,6 +78,7 @@ def create_app(matomo_client, settings: dict) -> Starlette:
         return JSONResponse({"data": data})
 
     app.add_route("/foo", foo)
+    app.add_route("/foo2", foo)
     app.add_route("/bar", bar)
     app.add_route("/health", health)
     app.add_route("/some/old/path", old)
@@ -91,7 +102,6 @@ def fixture_expected_q(settings: dict) -> dict:
         "apiv": ["1"],
         # "lang": ["None"]
         "rec": ["1"],
-        "ua": ["python-httpx/0.24.0"],
         "send_image": ["0"],
         "cvar": ['{"http_status_code": 200, "http_method": "GET"}'],
     }
@@ -114,6 +124,7 @@ async def test_matomo_client_gets_called_on_get_foo(
     matomo_client.get.assert_awaited()
 
     expected_q["url"][0] += "/foo"
+    expected_q["action_name"] = ["/foo"]
     assert_query_string(str(matomo_client.get.await_args), expected_q)
 
 
@@ -128,6 +139,7 @@ async def test_matomo_client_gets_called_on_get_bar(
     matomo_client.get.assert_awaited()
 
     expected_q["url"][0] += "/bar"
+    expected_q["action_name"] = ["/bar"]
     expected_q["cvar"][0] = expected_q["cvar"][0].replace("200", "400")
 
     assert_query_string(str(matomo_client.get.await_args), expected_q)
@@ -146,6 +158,7 @@ async def test_matomo_client_gets_called_on_get_custom_var(
     expected_q["url"][0] += "/set/custom/var"
     expected_q["e_a"] = ["Playing"]
     expected_q["pf_srv"] = ["123"]
+    expected_q["action_name"] = ["/set/custom/var"]
     expected_q["cvar"] = [
         '{"http_status_code": 200, "http_method": "GET", "anything": "goes"}'
     ]
@@ -180,6 +193,7 @@ def assert_query_string(url: str, expected_q: dict) -> None:
     q = parse_qs(urlparts.query)
     assert q.pop("rand") is not None
     assert q.pop("gt_ms") is not None
+    assert q.pop("ua")[0].startswith("python-httpx")
 
     assert q == expected_q
 
@@ -192,6 +206,7 @@ async def test_matomo_client_gets_called_on_post_baz(
     assert response.status_code == 200
 
     expected_q["url"][0] += "/baz"
+    expected_q["action_name"] = ["/baz"]
     expected_q["cvar"][0] = expected_q["cvar"][0].replace("GET", "POST")
     matomo_client.get.assert_awaited()
 
@@ -205,3 +220,19 @@ async def test_real_async_client_is_created(settings: dict) -> None:
         async with AsyncClient(app=app, base_url="http://testserver") as client:
             response = await client.get("/health")
             assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_foo2_has_custom_action_name(
+    client: AsyncClient, matomo_client, expected_q: dict
+) -> None:
+    respone = await client.get("/foo2")
+    assert respone.status_code == 200
+
+    expected_q["url"][0] += "/foo2"
+    expected_q["action_name"] = ["The real foo"]
+    expected_q["e_a"] = ["fooing"]
+
+    matomo_client.get.assert_awaited()
+
+    assert_query_string(str(matomo_client.get.await_args), expected_q)
