@@ -135,6 +135,7 @@ This project keeps a [changelog](./CHANGELOG.md).
 
 ## Latest Changes
 
+* feat: add PerfMsTracker. PR [#10](https://github.com/spraakbanken/asgi-matomo/pull/10) by [@kod-kristoff](https://github.com/kod-kristoff).
 
 ## [0.3.0] - 2023-05-22
 ### Added
