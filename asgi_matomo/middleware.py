@@ -123,6 +123,12 @@ class MatomoMiddleware:
             await self.app(scope, receive, send)
             return
 
+        # ensure 'asgi_matomo' is set in state
+        if "state" not in scope:
+            scope["state"] = {}  # type: ignore
+
+        if "asgi_matomo" not in scope["state"]:  # type: ignore
+            scope["state"]["asgi_matomo"] = {}  # type: ignore
         path = scope["path"]
         dont_track_this = False
         if path in self.exclude_paths:
