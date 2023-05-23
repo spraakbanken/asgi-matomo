@@ -25,6 +25,7 @@ Currently this middleware tracks:
 - `cvar` with at least `http_status_code` and `http_method` set.
 - `lang` if `accept-lang` is set
 - `cip` client ip, **requires** `access_token` to be given.
+- `action_name` that defaults to path, but can be specified.
 
 You can also pass variable to track by adding an `asgi_matomo`  dict in the `state` dict of the ASGI `scope`:
 ```python
@@ -42,6 +43,35 @@ scope = {
 ```
 
 The keys of the `asgi_matomo` dict is expected to be valid parameter for the [Matomo HTTP Tracking API](https://developer.matomo.org/api-reference/tracking-api). `cvar` is serialized with the standard `json` lib.
+
+You can also track time spent on different tasks with `trackers.PerfMsTracker`.
+```python
+import asyncio
+from starlette.applications import Starlette
+from starlette.responses import JSONResponse
+from starlette.routing import Route
+from starlette.middleware import Middleware
+
+from asgi_matomo import MatomoMiddleware
+from asgi_matomo.trackers import PerfMsTracker
+
+async def homepage(request):
+    async with PerfMsTracker(scope=request.scope, key="pf_srv"):
+        # fetch/compute data
+        await asyncio.sleep(1)
+        data = {"data": "a"*4000}
+    return JSONResponse(data)
+
+app = Starlette(
+  routes=[Route("/", homepage)],
+  middleware=[
+    Middleware(
+      MatomoMiddleware,
+      matomo_url="YOUR MATOMO TRACKING URL",
+      idsite=12345, # your service tracking id
+  )],
+)
+```
 
 ## Examples
 
@@ -129,11 +159,13 @@ These are tried after `exclude_paths`.
 - [x] _custom extraction of tracked data_
 
 
-This project keeps a [changelog](./CHANGELOG.md).
+This project keeps a [changelog](https://github.com/spraakbanken/asgi-matomo/CHANGELOG.md).
 
 # Releas Notes
 
 ## Latest Changes
+
+## [0.3.2] - 2023-05-23
 
 * feat: add PerfMsTracker. PR [#10](https://github.com/spraakbanken/asgi-matomo/pull/10) by [@kod-kristoff](https://github.com/kod-kristoff).
 
