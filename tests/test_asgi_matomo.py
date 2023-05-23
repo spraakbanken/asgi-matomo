@@ -1,4 +1,5 @@
 import contextlib
+import time
 from dataclasses import dataclass
 from typing import AsyncGenerator
 from unittest import mock
@@ -14,6 +15,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse
 
 from asgi_matomo import MatomoMiddleware
+from asgi_matomo.trackers import PerfMsTracker
 
 
 @dataclass
@@ -65,16 +67,18 @@ def create_app(matomo_client, settings: dict) -> Starlette:
             request.scope["state"] = {}
         request.scope["state"]["asgi_matomo"] = {
             "e_a": "Playing",
-            "pf_srv": "123",
             "cvar": {"anything": "goes"},
         }
+        with PerfMsTracker(scope=request.scope, key="pf_srv"):
+            time.sleep(0.1)
         return PlainTextResponse("custom_var")
 
     async def bar(request):
         raise HTTPException(status_code=400, detail="bar")
 
     async def baz(request):
-        data = await request.json()
+        async with PerfMsTracker(scope=request.scope, key="pf_srv"):
+            data = await request.json()
         return JSONResponse({"data": data})
 
     app.add_route("/foo", foo)
@@ -149,15 +153,14 @@ async def test_matomo_client_gets_called_on_get_bar(
 async def test_matomo_client_gets_called_on_get_custom_var(
     client: AsyncClient, matomo_client, expected_q: dict
 ):
-    with contextlib.suppress(ValueError):
-        _response = await client.get("/set/custom/var")
-    # assert response.status_code == 200
+    response = await client.get("/set/custom/var")
+    assert response.status_code == 200
 
     matomo_client.get.assert_awaited()
 
     expected_q["url"][0] += "/set/custom/var"
     expected_q["e_a"] = ["Playing"]
-    expected_q["pf_srv"] = ["123"]
+    expected_q["pf_srv"] = 100000
     expected_q["action_name"] = ["/set/custom/var"]
     expected_q["cvar"] = [
         '{"http_status_code": 200, "http_method": "GET", "anything": "goes"}'
@@ -194,6 +197,8 @@ def assert_query_string(url: str, expected_q: dict) -> None:
     assert q.pop("rand") is not None
     assert q.pop("gt_ms") is not None
     assert q.pop("ua")[0].startswith("python-httpx")
+    if expected_lower_limit := expected_q.pop("pf_srv", None):
+        assert float(q.pop("pf_srv")[0]) >= expected_lower_limit
 
     assert q == expected_q
 
@@ -207,6 +212,7 @@ async def test_matomo_client_gets_called_on_post_baz(
 
     expected_q["url"][0] += "/baz"
     expected_q["action_name"] = ["/baz"]
+    expected_q["pf_srv"] = 30
     expected_q["cvar"][0] = expected_q["cvar"][0].replace("GET", "POST")
     matomo_client.get.assert_awaited()
 
