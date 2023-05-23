@@ -14,19 +14,23 @@ env:
 
 jobs:
   lint:
-    runs-on: ${{ matrix.os }}
     name: ${{ matrix.task.name }} (${{ matrix.os }})
     strategy:
       max-parallel: 4
-      fail-fast: true
+      fail-fast: false
       matrix:
-        # Only run checks on ubuntu for MINIMUM_PYTHON_VERSION
-        os: [ubuntu-latest]
+        # Only run checks for ubuntu
+        os: [ubuntu]
         task:
           - name: Type check
             run: make type-check
+          - name: Check formatting
+            run: make check-fmt
           - name: Lint code
             run: make lint
+
+    runs-on: ${{ matrix.os }}-latest
+
     steps:
       #----------------------------------------------
       #       check-out repo and set-up python
@@ -47,13 +51,28 @@ jobs:
           version: ${{ env.POETRY_VERSION }}
           virtualenvs-create: true
           virtualenvs-in-project: true
-
-       #----------------------------------------------
+      #----------------------------------------------
+      #       load cached venv if cache exists
+      #----------------------------------------------
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('.github/workflows/ci.yml')}}
+      #----------------------------------------------
+      # install dependencies if cache does not exist
+      #----------------------------------------------
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: |
+          poetry install --no-interaction --no-root
+          poetry install --only ci
+      #----------------------------------------------
       # install your root project, if required
       #----------------------------------------------
       - name: Install library
-        run: make install-ci
-
+        run: poetry install --no-interaction
       #----------------------------------------------
       # Run matrix task
       #----------------------------------------------
@@ -99,7 +118,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('.github/workflows/coverage.yml') }}
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('.github/workflows/ci.yml') }}
       #----------------------------------------------
       # install dependencies if cache does not exist
       #----------------------------------------------
