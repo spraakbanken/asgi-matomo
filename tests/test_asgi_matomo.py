@@ -160,7 +160,7 @@ async def test_matomo_client_gets_called_on_get_custom_var(
 
     expected_q["url"][0] += "/set/custom/var"
     expected_q["e_a"] = ["Playing"]
-    expected_q["pf_srv"] = 100000
+    expected_q["pf_srv"] = 90000
     expected_q["action_name"] = ["/set/custom/var"]
     expected_q["cvar"] = [
         '{"http_status_code": 200, "http_method": "GET", "anything": "goes"}'
@@ -212,7 +212,7 @@ async def test_matomo_client_gets_called_on_post_baz(
 
     expected_q["url"][0] += "/baz"
     expected_q["action_name"] = ["/baz"]
-    expected_q["pf_srv"] = 30
+    expected_q["pf_srv"] = 25
     expected_q["cvar"][0] = expected_q["cvar"][0].replace("GET", "POST")
     matomo_client.get.assert_awaited()
 
