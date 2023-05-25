@@ -157,7 +157,7 @@ jobs:
           path: coverage
 
       - name: convert coverage to xml
-        run: coverage xml -i .coverage
+        run: poetry run coverage xml -i .coverage
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
