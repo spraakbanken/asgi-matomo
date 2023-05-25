@@ -165,6 +165,7 @@ This project keeps a [changelog](https://github.com/spraakbanken/asgi-matomo/CHA
 
 ## Latest Changes
 
+* add docs. PR [#11](https://github.com/spraakbanken/asgi-matomo/pull/11) by [@kod-kristoff](https://github.com/kod-kristoff).
 ## [0.3.2] - 2023-05-23
 
 * feat: add PerfMsTracker. PR [#10](https://github.com/spraakbanken/asgi-matomo/pull/10) by [@kod-kristoff](https://github.com/kod-kristoff).
