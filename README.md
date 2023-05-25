@@ -165,6 +165,7 @@ This project keeps a [changelog](https://github.com/spraakbanken/asgi-matomo/CHA
 
 ## Latest Changes
 
+* ci: add smokeshow. PR [#16](https://github.com/spraakbanken/asgi-matomo/pull/16) by [@kod-kristoff](https://github.com/kod-kristoff).
 ## [0.4.0] - 2023-05-25
 
 * Handle lifespan correctly. PR [#13](https://github.com/spraakbanken/asgi-matomo/pull/13) by [@kod-kristoff](https://github.com/kod-kristoff).
