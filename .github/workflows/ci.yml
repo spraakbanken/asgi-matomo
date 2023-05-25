@@ -142,19 +142,22 @@ jobs:
       # Run tests and upload coverage
       #----------------------------------------------
       - name: Run tests for coverage
-        run: make cov_report=xml all-tests-w-coverage
+        run: make all-tests-w-coverage
 
       - name: copy coverage
         # working-directory: cli
         run: |
           mkdir coverage
-          cp -v coverage.xml coverage/coverage.${{ matrix.os }}-py${{ matrix.python-version }}.xml
+          cp -v .coverage coverage/.coverage.${{ matrix.os }}-py${{ matrix.python-version }}
 
       - name: store coverage files
         uses: actions/upload-artifact@v3
         with:
           name: coverage
           path: coverage
+
+      - name: convert coverage to xml
+        run: coverage xml -i .coverage
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -193,9 +196,9 @@ jobs:
         # working-directory: cli
         run: |
 
-          coverage combine --data-file=coverage/coverage
+          coverage combine --data-file=coverage/.coverage
           ls coverage
-          coverage html -i --data-file=coverage/coverage.xml
+          coverage html -i --data-file=coverage/.coverage
 
       - run: smokeshow upload htmlcov
         env:

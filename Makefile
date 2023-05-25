@@ -76,7 +76,7 @@ all-tests: clean-pyc unit-tests integration-tests e2e-tests
 
 .PHONY: all-tests-w-coverage
 all-tests-w-coverage:
-	${INVENV} pytest -vv ${cov} --cov-report=${cov_report} ${all_tests}
+	${INVENV} pytest -vv ${cov} ${all_tests}
 
 .PHONY: test-w-coverage
 test-w-coverage:
