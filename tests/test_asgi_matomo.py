@@ -44,7 +44,9 @@ def fixture_settings() -> dict:
     return {"idsite": 1, "base_url": "https://testserver"}
 
 
-def create_app(matomo_client, settings: dict) -> Starlette:
+def create_app(
+    matomo_client, settings: dict, token: typing.Optional[str] = None
+) -> Starlette:
     app = Starlette()
 
     app.add_middleware(
@@ -52,6 +54,7 @@ def create_app(matomo_client, settings: dict) -> Starlette:
         client=matomo_client,
         matomo_url="http://trackingserver",
         idsite=settings["idsite"],
+        access_token=token,
         exclude_paths=["/health"],
         exclude_patterns=[".*/old.*"],
         route_details={"/foo2": {"action_name": "The real foo", "e_a": "fooing"}},
@@ -102,6 +105,11 @@ def fixture_app(matomo_client, settings: dict) -> Starlette:
     return create_app(matomo_client, settings)
 
 
+@pytest.fixture(name="app_w_token")
+def fixture_app_w_token(matomo_client, settings: dict) -> Starlette:
+    return create_app(matomo_client, settings, token="FAKE-TOKEN")  # noqa: S106
+
+
 @pytest.fixture(name="expected_q")
 def fixture_expected_q(settings: dict) -> dict:
     return {
@@ -120,6 +128,49 @@ async def fixture_client(app: Starlette) -> AsyncGenerator[AsyncClient, None]:
     async with LifespanManager(app):
         async with AsyncClient(app=app, base_url="http://testserver") as client:
             yield client
+
+
+@pytest_asyncio.fixture(name="client_w_token")
+async def fixture_client_w_token(
+    app_w_token: Starlette,
+) -> AsyncGenerator[AsyncClient, None]:
+    async with LifespanManager(app_w_token):
+        async with AsyncClient(app=app_w_token, base_url="http://testserver") as client:
+            yield client
+
+
+@pytest.mark.asyncio
+async def test_middleware_w_token_tracks_cip(
+    client_w_token: AsyncClient, matomo_client, expected_q: dict
+):
+    response = await client_w_token.get("/foo")
+    assert response.status_code == 200
+
+    matomo_client.get.assert_awaited()
+
+    expected_q["url"][0] += "/foo"
+    expected_q["action_name"] = ["/foo"]
+    expected_q["cip"] = ["127.0.0.1"]
+    expected_q["token_auth"] = ["FAKE-TOKEN"]
+    assert_query_string(str(matomo_client.get.await_args), expected_q)
+
+
+@pytest.mark.asyncio
+async def test_middleware_w_token_respects_x_forwarded_for(
+    client_w_token: AsyncClient, matomo_client, expected_q: dict
+):
+    response = await client_w_token.get(
+        "/foo", headers={"x-forwarded-for": "127.0.0.2"}
+    )
+    assert response.status_code == 200
+
+    matomo_client.get.assert_awaited()
+
+    expected_q["url"][0] += "/foo"
+    expected_q["action_name"] = ["/foo"]
+    expected_q["cip"] = ["127.0.0.2"]
+    expected_q["token_auth"] = ["FAKE-TOKEN"]
+    assert_query_string(str(matomo_client.get.await_args), expected_q)
 
 
 @pytest.mark.asyncio
