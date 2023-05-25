@@ -316,7 +316,7 @@ jobs:
       #   uses: pypa/gh-action-pypi-publish@release/v1
   publish-dev-docs:
     needs: [check, test-build]
-    if: "success() && github.ref == 'refs/heads/main')"
+    if: "success() && github.ref == 'refs/heads/main'"
     runs-on: ubuntu-latest
     environment: release
     permissions:
