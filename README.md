@@ -165,6 +165,8 @@ This project keeps a [changelog](https://github.com/spraakbanken/asgi-matomo/CHA
 
 ## Latest Changes
 
+## [0.4.0] - 2023-05-25
+
 * Handle lifespan correctly. PR [#13](https://github.com/spraakbanken/asgi-matomo/pull/13) by [@kod-kristoff](https://github.com/kod-kristoff).
 * add docs. PR [#11](https://github.com/spraakbanken/asgi-matomo/pull/11) by [@kod-kristoff](https://github.com/kod-kristoff).
 ## [0.3.2] - 2023-05-23
