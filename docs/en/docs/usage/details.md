@@ -7,7 +7,7 @@ Sometimes we want to change something that is tracked, it can either be about a 
 We can configure a route by giving the middleware a dict with details.
 
 ```python
-{!../../../docs_src/details/tutorial001.py!}
+{! ../../../docs_src/details/tutorial001.py!}
 ```
 
 In this example, we are changing the details about the route `/foo` in the following ways:
@@ -38,7 +38,7 @@ Here, in this example, we
 To help you track time spent on different tasks, you can use `PerfMsTracker`.
 
 ```python
-{!../../../docs_src/details/tutorial003.py!}
+{! ../../../docs_src/details/tutorial003.py!}
 ```
 
 In this example the function `fetch_data` simulates fetching some data from somewhere else, and we want to track the time it takes to fetch the data in the variable `pf_srv`.

@@ -12,6 +12,7 @@ nav:
 - Usage:
   - usage/index.md
   - usage/details.md
+  - usage/testing.md
 markdown_extensions:
 - toc:
     permalink: true
@@ -32,3 +33,6 @@ markdown_extensions:
     alternate_style: true
 - attr_list
 - md_in_html
+extra:
+  version:
+    provider: mike
