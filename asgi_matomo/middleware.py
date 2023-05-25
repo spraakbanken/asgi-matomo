@@ -6,13 +6,16 @@ import time
 import traceback
 import typing
 import urllib.parse
-from typing import Any
+from contextlib import AsyncExitStack, asynccontextmanager
+from typing import Any, AsyncIterator
 
 import httpx
 from asgiref.typing import (
     ASGI3Application,
     ASGIReceiveCallable,
+    ASGIReceiveEvent,
     ASGISendCallable,
+    ASGISendEvent,
     HTTPScope,
 )
 
@@ -66,10 +69,12 @@ class MatomoMiddleware:
     async def startup(self) -> None:
         if self.client is None:
             self.client = httpx.AsyncClient()
+        print("middleware startup: done")
 
     async def shutdown(self) -> None:
         if self.client is not None:
             await self.client.aclose()
+        print("middleware shutdown: done")
 
     async def lifespan(
         self, scope: HTTPScope, receive: ASGIReceiveCallable, send: ASGISendCallable
@@ -77,30 +82,92 @@ class MatomoMiddleware:
         """
         Handle ASGI lifespan messages, which allows us to manage application
         startup and shutdown events.
+
+        Code borrowed from: https://github.com/adriangb/asgi-lifespan
         """
-        started = False
-        app: typing.Any = scope.get("app")
-        await receive()
-        try:
-            async with self.lifespan_context(app) as maybe_state:
-                if maybe_state is not None:
-                    if "state" not in scope:
-                        raise RuntimeError(
-                            'The server does not support "state" in the lifespan scope.'
-                        )
-                    scope["state"].update(maybe_state)  # type: ignore
-                await send({"type": "lifespan.startup.complete"})
-                started = True
-                await receive()
-        except BaseException:
-            exc_text = traceback.format_exc()
-            if started:
-                await send({"type": "lifespan.shutdown.failed", "message": exc_text})
+        rcv_events: dict[str, bool] = {}
+        send_events: dict[str, bool] = {}
+
+        async def wrapped_rcv() -> ASGIReceiveEvent:
+            message = await receive()
+            rcv_events[message["type"]] = True
+            return message
+
+        async def wrapped_send(message: ASGISendEvent) -> None:
+            send_events[message["type"]] = True
+            if message["type"] == "lifespan.shutdown.complete":
+                # we want to send this one ourselves
+                # once we are done
+                return
+            await send(message)
+
+        @asynccontextmanager
+        async def cleanup() -> "AsyncIterator[None]":
+            try:
+                yield
+            except BaseException:
+                exc_text = traceback.format_exc()
+                if "lifespan.startup.complete" in send_events:
+                    await send(
+                        {"type": "lifespan.shutdown.failed", "message": exc_text}
+                    )
+                else:
+                    await send({"type": "lifespan.startup.failed", "message": exc_text})
+                raise
             else:
-                await send({"type": "lifespan.startup.failed", "message": exc_text})
-            raise
-        else:
-            await send({"type": "lifespan.shutdown.complete"})
+                await send({"type": "lifespan.shutdown.complete"})
+
+        lifespan_cm = self.lifespan_context(self.app)
+
+        async with AsyncExitStack() as stack:
+            await stack.enter_async_context(cleanup())
+            await stack.enter_async_context(lifespan_cm)
+            try:
+                # one of 4 things will happen when we call the app:
+                # 1. it supports lifespans. it will block until the server
+                #    sends the shutdown signal, at which point we get control
+                #    back and can run our own teardown
+                # 2. it does nothing and returns. in this case we do the
+                #    back and forth with the ASGI server ourselves
+                # 3. it raises an exception.
+                #    a. before raising the exception it sent a
+                #       "lifespan.startup.failed" message
+                #       this means it supports lifespans, but it's lifespan
+                #       errored out. we'll re-raise to trigger our teardown
+                #    b. it did not send a "lifespan.startup.failed" message
+                #       this app doesn't support lifespans, the spec says
+                #       to just swallow the exception and proceed
+                # 4. it supports lifespan events and it's lifespan fails
+                #    (it sends a "lifespan.startup.failed" message)
+                #    in this case we'll run our teardown and then return
+                await self.app(scope, wrapped_rcv, wrapped_send)
+            except BaseException:  # noqa: BLE001
+                if (
+                    "lifespan.startup.failed" in send_events
+                    or "lifespan.shutdown.failed" in send_events
+                ):
+                    # the app tried to start and failed
+                    # this app re-raises the exceptions (Starlette does this)
+                    # re-raise so that our teardown is triggered
+                    raise
+                # the app doesn't support lifespans
+                # the spec says to ignore these errors and just don't send
+                # more lifespan events
+            if "lifespan.startup.failed" in send_events:
+                # the app supports lifespan events
+                # but it failed to start
+                # this app does not re-raise exceptions
+                # so all we can do is run our teardown and exit
+                return
+            if "lifespan.startup.complete" not in send_events:
+                # the app doesn't support lifespans at all
+                # so we'll have to talk to the ASGI server ourselves
+                await receive()
+                await send({"type": "lifespan.startup.complete"})
+                # we'll block here until the ASGI server shuts us down
+                await receive()
+        # even if the app sent this, we intercepted it and discarded it until we were done
+        # await send({"type": "lifespan.shutdown.complete"})
 
     async def __call__(
         self, scope: HTTPScope, receive: ASGIReceiveCallable, send: ASGISendCallable
