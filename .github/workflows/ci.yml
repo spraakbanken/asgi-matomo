@@ -86,8 +86,8 @@ jobs:
       max-parallel: 4
       fail-fast: false
       matrix:
-        # ignore windows for now
-        os: [ubuntu, macos] # , windows-latest]
+        # only do test-build for macos and windows for now
+        os: [ubuntu] # , macos , windows-latest]
         python-version:
           - "3.10"
           - "3.11"
