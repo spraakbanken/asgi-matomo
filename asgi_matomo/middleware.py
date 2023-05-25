@@ -175,7 +175,7 @@ class MatomoMiddleware:
         # locals inside the app function (send_wrapper) can't be assigned to,
         # as the interpreter detects the assignment and thus creates a new
         # local variable within that function, with that name.
-        instance = {"http_status_code": None}
+        instance = {"http_status_code": 500}
 
         def send_wrapper(response):
             if response["type"] == "http.response.start":
@@ -274,16 +274,18 @@ class MatomoMiddleware:
         server = None
         user_agent = None
         accept_lang = None
+        cip = None
         path = scope["path"]
 
         for header, value in scope["headers"]:
             if header == b"accept_lang":
                 accept_lang = value
-
             elif header == b"user-agent":
                 user_agent = value
             elif header == b"x-forwarded-server":
                 server = value.decode("utf-8")
+            elif header == b"x-forwarded-for":
+                cip = value.decode("utf-8")
         if server is None:
             if scope["server"] is None:
                 logger.error("'server' is not set in scope, skip tracking...")
@@ -325,7 +327,8 @@ class MatomoMiddleware:
             )
         )
 
-        cip = scope["client"][0] if scope["client"] else None
+        if not cip:
+            cip = scope["client"][0] if scope["client"] else None
 
         tracking_state = {
             "idsite": self.idsite,
