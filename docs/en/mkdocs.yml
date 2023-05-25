@@ -1,0 +1,38 @@
+site_name: asgi-matomo
+site_url: https://spraakbanken.github.io/asgi-matomo
+theme: material
+repo_name: spraakbanken/asgi-matomo
+repo_url: https://github.com/spraakbanken/asgi-matomo
+plugins:
+- search
+- markdownextradata:
+    data: data
+nav:
+- asgi-matomo: index.md
+- Usage:
+  - usage/index.md
+  - usage/details.md
+  - usage/testing.md
+markdown_extensions:
+- toc:
+    permalink: true
+- markdown.extensions.codehilite:
+    guess_lang: false
+- mdx_include:
+    base_path: docs
+- admonition
+- codehilite
+- extra
+- pymdownx.superfences:
+    custom_fences:
+    - name: mermaid
+      class: mermaid
+      format: !!python/name:pymdownx.superfences.fence_code_format ''
+- pymdownx.details
+- pymdownx.tabbed:
+    alternate_style: true
+- attr_list
+- md_in_html
+extra:
+  version:
+    provider: mike

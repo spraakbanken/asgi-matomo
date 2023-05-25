@@ -107,7 +107,7 @@ from asgi_matomo import MatomoMiddleware
 
 app = FastAPI()
 app.add_middleware(
-  BrotliMiddleware,
+  MatomoMiddleware,
   matomo_url="YOUR MATOMO TRACKING URL",
   idsite=12345, # your service tracking id
 )
