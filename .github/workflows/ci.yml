@@ -349,6 +349,7 @@ jobs:
       - name: Build docs
         run: |
           cd docs/en
+          poetry run mike delete dev
           poetry run mike deploy -u dev
 
       - name: Publish
