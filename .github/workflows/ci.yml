@@ -220,16 +220,20 @@ jobs:
           path: coverage
 
       - name: convert coverage to xml
-        run: poetry run coverage xml -i coverage/.coverage
+        run: |
+          poetry run coverage combine --data-files coverage/.coverage
+          poetry run coverage xml -i --data-files coverage/.coverage
+          ls
+          ls coverage
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          directory: ./coverage
+          # directory: ./coverage
           # env_vars: OS,PYTHON
           fail_ci_if_error: false
-          # files: ./coverage1.xml,./coverage2.xml
+          files: ./coverage/coverage.xml
           # flags: unittests
           # name: codecov-umbrella
           verbose: true
