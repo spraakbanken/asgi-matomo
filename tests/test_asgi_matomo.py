@@ -1,5 +1,7 @@
+import asyncio
 import contextlib
 import time
+import typing
 from dataclasses import dataclass
 from typing import AsyncGenerator
 from unittest import mock
@@ -11,8 +13,10 @@ from asgi_lifespan import LifespanManager
 from httpx import AsyncClient
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
+from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse
+from starlette.routing import Route
 
 from asgi_matomo import MatomoMiddleware
 from asgi_matomo.trackers import PerfMsTracker
@@ -242,3 +246,93 @@ async def test_foo2_has_custom_action_name(
     matomo_client.get.assert_awaited()
 
     assert_query_string(str(matomo_client.get.await_args), expected_q)
+
+
+@pytest.mark.asyncio
+async def test_middleware_handles_lifespan_startups_errors():
+    @contextlib.asynccontextmanager
+    async def custom_lifespan(app):
+        raise RuntimeError("startup failure")
+        yield
+
+    async def homepage(request):
+        return JSONResponse({"a": "b"})
+
+    app = Starlette(
+        routes=[Route("/", homepage)],
+        middleware=[
+            Middleware(
+                MatomoMiddleware,
+                matomo_url="YOUR MATOMO TRACKING URL",
+                idsite=12345,  # your service tracking id
+            )
+        ],
+        lifespan=custom_lifespan,
+    )
+
+    lifespan_scope = {
+        "type": "lifespan",
+        "asgi": {
+            "version": "3.0",
+        },
+        "state": {},
+    }
+
+    async def receive():
+        return {"type": "lifespan.startup"}
+
+    async def send(message) -> None:
+        assert message["type"] in (
+            "lifespan.startup.complete",
+            "lifespan.startup.failed",
+            "lifespan.shutdown.complete",
+            "lifespan.shutdown.failed",
+        )
+
+    with pytest.raises(RuntimeError, match="startup failure"):
+        await app(lifespan_scope, receive, send)
+
+
+@pytest.mark.asyncio
+async def test_middleware_handles_lifespan_shutdown_errors():
+    @contextlib.asynccontextmanager
+    async def custom_lifespan(app):
+        yield
+        raise RuntimeError("shutdown failure")
+
+    async def homepage(request):
+        return JSONResponse({"a": "b"})
+
+    app = Starlette(
+        routes=[Route("/", homepage)],
+        middleware=[
+            Middleware(
+                MatomoMiddleware,
+                matomo_url="YOUR MATOMO TRACKING URL",
+                idsite=12345,  # your service tracking id
+            )
+        ],
+        lifespan=custom_lifespan,
+    )
+
+    lifespan_scope = {
+        "type": "lifespan",
+        "asgi": {
+            "version": "3.0",
+        },
+        "state": {},
+    }
+
+    async def receive():
+        return {"type": "lifespan.shutdown"}
+
+    async def send(message) -> None:
+        assert message["type"] in (
+            "lifespan.startup.complete",
+            "lifespan.startup.failed",
+            "lifespan.shutdown.complete",
+            "lifespan.shutdown.failed",
+        )
+
+    with pytest.raises(RuntimeError, match="shutdown failure"):
+        await app(lifespan_scope, receive, send)
