@@ -35,7 +35,7 @@ ruff = "0.0.263"
 [tool.poetry.group.docs.dependencies]
 mike = "^1.1.2"
 mkdocs = "^1.4.3"
-mkdocs-material = "<9.0.0"
+mkdocs-material = "<10.0.0"
 mdx-include = "<2.0.0"
 markdown = "<3.4"
 mkdocs-markdownextradata-plugin = ">=0.1.7,<0.3.0"
