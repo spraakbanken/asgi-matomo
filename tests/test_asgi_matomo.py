@@ -174,6 +174,21 @@ async def test_middleware_w_token_respects_x_forwarded_for(
 
 
 @pytest.mark.asyncio
+async def test_middleware_tracks_urlref(
+    client: AsyncClient, matomo_client, expected_q: dict
+):
+    response = await client.get("/foo", headers={"referer": "https://example.com"})
+    assert response.status_code == 200
+
+    matomo_client.get.assert_awaited()
+
+    expected_q["url"][0] += "/foo"
+    expected_q["action_name"] = ["/foo"]
+    expected_q["urlref"] = ["https://example.com"]
+    assert_query_string(str(matomo_client.get.await_args), expected_q)
+
+
+@pytest.mark.asyncio
 async def test_matomo_client_gets_called_on_get_foo(
     client: AsyncClient, matomo_client, expected_q: dict
 ):

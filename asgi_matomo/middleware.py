@@ -276,6 +276,7 @@ class MatomoMiddleware:
         accept_lang = None
         cip = None
         path = scope["path"]
+        urlref = None
 
         for header, value in scope["headers"]:
             if header == b"accept_lang":
@@ -286,6 +287,8 @@ class MatomoMiddleware:
                 server = value.decode("utf-8")
             elif header == b"x-forwarded-for":
                 cip = value.decode("utf-8")
+            elif header == b"referer":
+                urlref = value
         if server is None:
             if scope["server"] is None:
                 logger.error("'server' is not set in scope, skip tracking...")
@@ -348,4 +351,6 @@ class MatomoMiddleware:
             tracking_state["cip"] = cip
         if accept_lang:
             tracking_state["lang"] = accept_lang
+        if urlref:
+            tracking_state["urlref"] = urlref
         return tracking_state
