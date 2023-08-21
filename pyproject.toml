@@ -28,7 +28,7 @@ pytest-cov = "^4.0.0"
 bump2version = "^1.0.1"
 
 [tool.poetry.group.ci.dependencies]
-ruff = "0.0.263"
+ruff = "0.0.285"
 
 
 
