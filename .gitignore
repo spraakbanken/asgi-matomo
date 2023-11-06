@@ -162,6 +162,7 @@ cython_debug/
 # Ignore lock files
 poetry.lock
 requirements.lock
+requirements-dev.lock
 
 /docs/en/site/
 .python-version
