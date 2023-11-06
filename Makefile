@@ -4,7 +4,7 @@ PLATFORM := ${shell uname -o}
 
 
 ifeq (${VIRTUAL_ENV},)
-  INVENV = poetry run
+  INVENV = rye run
 else
   INVENV =
 endif
@@ -42,19 +42,14 @@ help:
 
 dev: install-dev
 install-dev:
-	poetry install
+	rye sync
 
 # setup CI environment
-install-ci: install-dev
-	poetry install --only ci
+install-ci: 
+	rye sync --features=ci
 
-.PHONY: serve
-serve: install-dev
-	${INVENV} uvicorn --factory karp.karp_v6_api.main:create_app
-
-.PHONY: serve-w-reload
-serve-w-reload: install-dev
-	${INVENV} uvicorn --reload --factory karp.karp_v6_api.main:create_app
+install-docs:
+	rye sync --features=docs
 
 unit_test_dirs := tests
 e2e_test_dirs := tests
@@ -107,10 +102,10 @@ integration-tests-w-coverage: clean-pyc
 
 .PHONY: lint
 lint:
-	${INVENV} ruff ${flags} asgi_matomo tests
+	${INVENV} ruff ${flags} src tests
 
 .PHONY: serve-docs
-serve-docs:
+serve-docs: install-docs
 	cd docs && ${INVENV} mkdocs serve && cd -
 
 .PHONY: type-check
@@ -144,11 +139,13 @@ bumpversion:
 	${INVENV} bumpversion ${part}
 
 build:
-	poetry build
+	rye build
 
 .PHONY: tests/requirements.txt
 tests/requirements.txt: pyproject.toml
-	poetry export --with=dev --without-hashes --output=$@
+	rye lock
+	@cp requirements-dev.lock $@
+	sed -i '/-e file:./d' $@
 
 update-changelog:
 	git cliff --unreleased --prepend CHANGELOG.md

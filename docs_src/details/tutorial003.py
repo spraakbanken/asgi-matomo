@@ -1,12 +1,11 @@
 import asyncio
 
+from asgi_matomo import MatomoMiddleware
+from asgi_matomo.trackers import PerfMsTracker
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.responses import JSONResponse
 from starlette.routing import Route
-
-from asgi_matomo import MatomoMiddleware
-from asgi_matomo.trackers import PerfMsTracker
 
 
 async def fetch_data():

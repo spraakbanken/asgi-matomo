@@ -1,4 +1,3 @@
-import asyncio
 import contextlib
 import time
 import typing
@@ -10,6 +9,8 @@ from urllib.parse import parse_qs, urlsplit
 import pytest
 import pytest_asyncio
 from asgi_lifespan import LifespanManager
+from asgi_matomo import MatomoMiddleware
+from asgi_matomo.trackers import PerfMsTracker
 from httpx import AsyncClient
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
@@ -17,9 +18,6 @@ from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.routing import Route
-
-from asgi_matomo import MatomoMiddleware
-from asgi_matomo.trackers import PerfMsTracker
 
 
 @dataclass

@@ -8,15 +8,14 @@ from urllib.parse import parse_qs, urlsplit
 import pytest
 import pytest_asyncio
 from asgi_lifespan import LifespanManager
+from asgi_matomo import MatomoMiddleware
+from asgi_matomo.trackers import PerfMsTracker
 from httpx import AsyncClient
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.testclient import TestClient
-
-from asgi_matomo import MatomoMiddleware
-from asgi_matomo.trackers import PerfMsTracker
 
 
 @dataclass
