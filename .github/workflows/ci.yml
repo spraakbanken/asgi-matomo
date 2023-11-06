@@ -252,7 +252,7 @@ jobs:
           name: pypi_files
           path: dist
 
-      - run: rm -r asgi_matomo
+      - run: rm -r src/asgi_matomo
       - run: pip install typing-extensions
       - run: pip install -r requirements-dev.lock
       - run: pip install asgi-matomo --no-index --no-deps --find-links dist --force-reinstall
