@@ -1,6 +1,6 @@
 [project]
 name = "asgi-matomo"
-version = "0.4.1"
+version = "0.4.2"
 description = "Middleware for tracking ASGI reqeusts with Matomo"
 authors = [
     { name = "Kristoffer Andersson", email = "kristoffer.andersson@gu.se" },
