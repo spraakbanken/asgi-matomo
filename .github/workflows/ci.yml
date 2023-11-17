@@ -254,7 +254,7 @@ jobs:
 
       - run: rm -r src/asgi_matomo
       - run: pip install typing-extensions
-      - run: pip install -r tests/requirements.txt
+      - run: pip install -r tests/requirements-testing.txt
       - run: pip install asgi-matomo --no-index --no-deps --find-links dist --force-reinstall
       - run: pytest tests/test_asgi_matomo.py
 

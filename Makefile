@@ -141,8 +141,8 @@ bumpversion:
 build:
 	rye build
 
-.PHONY: tests/requirements.txt
-tests/requirements.txt: pyproject.toml
+.PHONY: tests/requirements-testing.txt
+tests/requirements-testing.txt: pyproject.toml
 	rye lock
 	@cp requirements-dev.lock $@
 	sed -i '/-e file:./d' $@
@@ -150,4 +150,4 @@ tests/requirements.txt: pyproject.toml
 update-changelog:
 	git cliff --unreleased --prepend CHANGELOG.md
 
-prepare-release: tests/requirements.txt update-changelog
+prepare-release: tests/requirements-testing.txt update-changelog
