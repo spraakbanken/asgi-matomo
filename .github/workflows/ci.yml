@@ -147,44 +147,6 @@ jobs:
           # name: codecov-umbrella
           verbose: true
 
-  coverage-check:
-    # dogfooding! use smokeshow to view our coverage report
-    needs:
-      - coverage
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.MINIMUM_PYTHON_VERSION }}
-
-      - name: get coverage files
-        uses: actions/download-artifact@v4
-        with:
-          # name: coverage
-          path: coverage
-          merge-multiple: true
-
-      - run: pip install coverage smokeshow
-
-      - name: build coverage
-        # working-directory: cli
-        run: |
-
-          coverage combine --data-file=coverage/.coverage
-          ls coverage
-          coverage html -i --data-file=coverage/.coverage
-
-      - run: smokeshow upload htmlcov
-        env:
-          SMOKESHOW_GITHUB_STATUS_DESCRIPTION: CLI Coverage {coverage-percentage}
-          SMOKESHOW_GITHUB_COVERAGE_THRESHOLD: 85
-          SMOKESHOW_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # SMOKESHOW_GITHUB_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          SMOKESHOW_AUTH_KEY: ${{ secrets.SMOKESHOW_AUTH_KEY }}
-
    # https://github.com/marketplace/actions/alls-green#why used for branch protection checks
   check:
     if: always()
