@@ -94,7 +94,7 @@ jobs:
       - name: store coverage files
         uses: actions/upload-artifact@v4
         with:
-          name: coverage
+          name: coverage-${{ matrix.os }}-${{ matrix.python-version }}
           path: coverage
 
 
@@ -124,8 +124,9 @@ jobs:
       - name: download coverage files
         uses: actions/download-artifact@v4
         with:
-          name: coverage
+          # name: coverage
           path: coverage
+          merge-multiple: true
 
       - name: convert coverage to xml
         run: |
@@ -162,8 +163,9 @@ jobs:
       - name: get coverage files
         uses: actions/download-artifact@v4
         with:
-          name: coverage
+          # name: coverage
           path: coverage
+          merge-multiple: true
 
       - run: pip install coverage smokeshow
 
