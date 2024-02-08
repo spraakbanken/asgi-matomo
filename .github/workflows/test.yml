@@ -100,7 +100,6 @@ jobs:
     if: always()
     needs: 
       - coverage
-      - doctests
       - minimal
     runs-on: ubuntu-latest
     permissions: {}
