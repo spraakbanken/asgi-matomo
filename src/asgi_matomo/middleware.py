@@ -61,9 +61,7 @@ class MatomoMiddleware:
         self.lifespan_context = _DefaultLifespan(self)
         self.client = client
         self.exclude_paths = set(exclude_paths or [])
-        self.compiled_patterns = [
-            re.compile(pattern) for pattern in (exclude_patterns or [])
-        ]
+        self.compiled_patterns = [re.compile(pattern) for pattern in (exclude_patterns or [])]
         self.route_details = route_details or {}
 
     async def startup(self) -> None:
@@ -108,9 +106,7 @@ class MatomoMiddleware:
             except BaseException:
                 exc_text = traceback.format_exc()
                 if "lifespan.startup.complete" in send_events:
-                    await send(
-                        {"type": "lifespan.shutdown.failed", "message": exc_text}
-                    )
+                    await send({"type": "lifespan.shutdown.failed", "message": exc_text})
                 else:
                     await send({"type": "lifespan.startup.failed", "message": exc_text})
                 raise
@@ -294,9 +290,7 @@ class MatomoMiddleware:
                 logger.error("'server' is not set in scope, skip tracking...")
                 raise RuntimeError("'server' is not set in scope")
             host, port = scope["server"]
-            logger.debug(
-                "setting server from scope", extra={"host": host, "port": port}
-            )
+            logger.debug("setting server from scope", extra={"host": host, "port": port})
             server = f"{host}:{port}" if port else host
 
         if ", " in server:
