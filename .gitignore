@@ -166,3 +166,4 @@ requirements-dev.lock
 
 /docs/en/site/
 .python-version
+.pdm-python
