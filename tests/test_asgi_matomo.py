@@ -42,9 +42,7 @@ def fixture_settings() -> dict:
     return {"idsite": 1, "base_url": "https://testserver"}
 
 
-def create_app(
-    matomo_client, settings: dict, token: typing.Optional[str] = None
-) -> Starlette:
+def create_app(matomo_client, settings: dict, token: typing.Optional[str] = None) -> Starlette:
     app = Starlette()
 
     app.add_middleware(
@@ -157,9 +155,7 @@ async def test_middleware_w_token_tracks_cip(
 async def test_middleware_w_token_respects_x_forwarded_for(
     client_w_token: AsyncClient, matomo_client, expected_q: dict
 ):
-    response = await client_w_token.get(
-        "/foo", headers={"x-forwarded-for": "127.0.0.2"}
-    )
+    response = await client_w_token.get("/foo", headers={"x-forwarded-for": "127.0.0.2"})
     assert response.status_code == 200
 
     matomo_client.get.assert_awaited()
@@ -172,9 +168,7 @@ async def test_middleware_w_token_respects_x_forwarded_for(
 
 
 @pytest.mark.asyncio
-async def test_middleware_tracks_urlref(
-    client: AsyncClient, matomo_client, expected_q: dict
-):
+async def test_middleware_tracks_urlref(client: AsyncClient, matomo_client, expected_q: dict):
     response = await client.get("/foo", headers={"referer": "https://example.com"})
     assert response.status_code == 200
 
@@ -230,9 +224,7 @@ async def test_matomo_client_gets_called_on_get_custom_var(
     expected_q["e_a"] = ["Playing"]
     expected_q["pf_srv"] = 90000
     expected_q["action_name"] = ["/set/custom/var"]
-    expected_q["cvar"] = [
-        '{"http_status_code": 200, "http_method": "GET", "anything": "goes"}'
-    ]
+    expected_q["cvar"] = ['{"http_status_code": 200, "http_method": "GET", "anything": "goes"}']
 
     assert_query_string(str(matomo_client.get.await_args), expected_q)
 
