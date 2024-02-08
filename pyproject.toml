@@ -1,7 +1,7 @@
 [project]
 name = "asgi-matomo"
 version = "0.5.0"
-description = "Middleware for tracking ASGI reqeusts with Matomo"
+description = "Middleware for tracking ASGI requests with Matomo"
 authors = [
     { name = "Kristoffer Andersson", email = "kristoffer.andersson@gu.se" },
 ]
@@ -16,9 +16,7 @@ repository = "https://github.com/spraakbanken/asgi-matomo"
 "Bug Tracker" = "https://github.com/spraakbanken/asgi-matomo/issues"
 
 [project.optional-dependencies]
-ci = [
-    "ruff>=0.1.4",
-]
+ci = ["ruff>=0.1.4"]
 docs = [
     "mike>=2.0.0",
     "mkdocs>=1.5.3",
