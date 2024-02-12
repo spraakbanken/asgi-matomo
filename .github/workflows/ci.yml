@@ -179,7 +179,7 @@ jobs:
       #----------------------------------------------
       - name: Install rye
         id: setup-rye
-        uses: eifinger/setup-rye@5b24b104a68da1e2ea0073aa191a2bab66f55d7c
+        uses: eifinger/setup-rye@88028203ecac5c631e2887f3f75d3ad3feddcad7
 
       #----------------------------------------------
       #  -----  build distribution -----
@@ -276,7 +276,7 @@ jobs:
       #----------------------------------------------
       - name: Install rye
         id: setup-rye
-        uses: eifinger/setup-rye@5b24b104a68da1e2ea0073aa191a2bab66f55d7c
+        uses: eifinger/setup-rye@88028203ecac5c631e2887f3f75d3ad3feddcad7
 
       - name: Install docs requirements
         run: make install-docs
@@ -321,7 +321,7 @@ jobs:
       #----------------------------------------------
       - name: Install rye
         id: setup-rye
-        uses: eifinger/setup-rye@5b24b104a68da1e2ea0073aa191a2bab66f55d7c
+        uses: eifinger/setup-rye@88028203ecac5c631e2887f3f75d3ad3feddcad7
 
       - name: Install docs requirements
         run: make install-docs
