@@ -9,7 +9,7 @@
 anyio==4.2.0
 asgi-lifespan==2.1.0
 asgiref==3.7.2
-black==23.12.0
+black==24.2.0
 bump2version==1.0.1
 certifi==2023.11.17
 click==8.1.7
