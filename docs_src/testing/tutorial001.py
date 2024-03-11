@@ -26,7 +26,7 @@ class MockResponse:
 
 def create_matomo_client():
     matomo_client = mock.AsyncMock(AsyncClient)
-    matomo_client.get = mock.AsyncMock(return_value=MockResponse(status_code=204))
+    matomo_client.post = mock.AsyncMock(return_value=MockResponse(status_code=204))
     return matomo_client
 
 
@@ -54,6 +54,6 @@ app = create_app(matomo_client)
 def test_app():
     client = TestClient(app)
     response = client.get("/foo")
-    assert response.status_code == 200
+    assert response.status_code == 200  # noqa: S101
 
-    matomo_client.get.assert_awaited()
+    matomo_client.post.assert_awaited()

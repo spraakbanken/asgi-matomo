@@ -215,8 +215,8 @@ class MatomoMiddleware:
         finally:
             end_time_ns = time.perf_counter_ns()
 
-            tracking_dict = self._build_tracking_state(scope)
-            tracking_dict.update(
+            tracking_data = self._build_tracking_state(scope)
+            tracking_data.update(
                 {
                     "gt_ms": (end_time_ns - start_time_ns) / 1000,
                     "cvar": {
@@ -229,24 +229,28 @@ class MatomoMiddleware:
             if "state" in scope and "asgi_matomo" in scope["state"]:  # type: ignore
                 for field, value in scope["state"]["asgi_matomo"].items():  # type: ignore
                     if (
-                        field in tracking_dict
-                        and isinstance(tracking_dict[field], dict)
+                        field in tracking_data
+                        and isinstance(tracking_data[field], dict)
                         and isinstance(value, dict)
                     ):
-                        tracking_dict[field].update(value)  # type: ignore
+                        tracking_data[field].update(value)  # type: ignore
                     else:
-                        tracking_dict[field] = value
+                        tracking_data[field] = value
 
-            tracking_dict["cvar"] = json.dumps(tracking_dict["cvar"])
-            tracking_params = urllib.parse.urlencode(tracking_dict)
-            tracking_url = f"{self.matomo_url}?{tracking_params}"
+            tracking_data["cvar"] = json.dumps(tracking_data["cvar"])
 
-            logger.debug("Making tracking call", extra={"url": tracking_url})
+            logger.debug(
+                "Making tracking call to '%s'",
+                self.matomo_url,
+                extra={"tracking_data": tracking_data},
+            )
             try:
                 if self.client is None:
                     logger.error("self.client is not set, can't track request")
                 else:
-                    tracking_response = await self.client.get(tracking_url)
+                    tracking_response = await self.client.post(
+                        self.matomo_url, data=tracking_data
+                    )
                     logger.debug(
                         "tracking response",
                         extra={
