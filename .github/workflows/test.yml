@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
   pull_request:
   merge_group:
 
@@ -71,6 +73,57 @@ jobs:
           # name: codecov-umbrella
           verbose: true
 
+  doctests:
+    name: "${{ matrix.os }} / 3.10 / doctest"
+    strategy:
+      max-parallel: 4
+      fail-fast: false
+      matrix:
+        os: [ubuntu] 
+
+    runs-on: ${{ matrix.os }}-latest
+    env:
+      OS: ${{ matrix.os }}-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up the environment
+        uses: pdm-project/setup-pdm@v4
+        id: setup-python
+        with:
+          python-version: ${{ env.MINIMUM_PYTHON_VERSION }}
+      
+      - name: Load cached venv
+        id: cached-venv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('.github/workflows/test.yml') }}
+  
+      - name: Install dependencies
+        if: steps.cached-venv.outputs.cache-hit != 'true'
+        run: make install-dev
+      #----------------------------------------------
+      # Run tests and upload coverage
+      #----------------------------------------------
+      - name: make doc-tests
+        run: make doc-tests cov_report=xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          # directory: ./coverage
+          env_vars: OS,PYTHON,TESTTYPE
+          fail_ci_if_error: true
+          # files: ./coverage/coverage.xml
+          # flags: unittests
+          # name: codecov-umbrella
+          verbose: true
+        env:
+          PYTHON: ${{ env.MINIMUM_PYTHON_VERSION }}
+          TESTTYPE: doctest
+
   minimal:
     # This action chooses the oldest version of the dependencies permitted by Cargo.toml to ensure
     # that this crate is compatible with the minimal version that this crate and its dependencies
@@ -100,6 +153,7 @@ jobs:
     if: always()
     needs: 
       - coverage
+      - doctests
       - minimal
     runs-on: ubuntu-latest
     permissions: {}
@@ -168,10 +222,10 @@ jobs:
           name: pypi_files
           path: dist
 
-      - run: rm -r src/asgi_matomo
+      - run: rm -r src/ocr_suggestion
       - run: pip install typing-extensions
       - run: pip install -r tests/requirements-testing.lock
-      - run: pip install asgi-matomo --no-index --no-deps --find-links dist --force-reinstall
+      - run: pip install sparv-ocr-suggestion-plugin --no-index --no-deps --find-links dist --force-reinstall
       - run: pytest
 
   publish:
