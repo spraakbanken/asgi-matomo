@@ -171,10 +171,10 @@ jobs:
           name: pypi_files
           path: dist
 
-      - run: rm -r src/ocr_suggestion
+      - run: rm -r src/asgi_matomo
       - run: pip install typing-extensions
       - run: pip install -r tests/requirements-testing.lock
-      - run: pip install sparv-ocr-suggestion-plugin --no-index --no-deps --find-links dist --force-reinstall
+      - run: pip install asgi-matomo --no-index --no-deps --find-links dist --force-reinstall
       - run: pytest
 
   publish:
