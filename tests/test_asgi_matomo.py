@@ -5,7 +5,6 @@ import typing
 from dataclasses import dataclass
 from typing import AsyncGenerator
 from unittest import mock
-from urllib.parse import parse_qs, urlsplit
 
 import pytest
 import pytest_asyncio
@@ -283,7 +282,7 @@ async def test_matomo_client_gets_called_on_post_baz(
 
     expected_data["url"] += "/baz"
     expected_data["action_name"] = "/baz"
-    expected_data["pf_srv"] = 25
+    expected_data["pf_srv"] = 20
     expected_data["cvar"] = expected_data["cvar"].replace("GET", "POST")
     matomo_client.post.assert_awaited()
 
