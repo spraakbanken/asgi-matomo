@@ -10,7 +10,7 @@ Tracking requests with Matomo from ASGI apps.
 
 **Note** If you serve HTML (directly or by templates), it is suggested to track those parts through Matomo's javascript tracking.
 
-**Installation**
+## Installation
 
 ```bash
 pip install asgi-matomo
@@ -19,6 +19,7 @@ pip install asgi-matomo
 ## What is tracked
 
 Currently this middleware tracks:
+
 - `url`
 - `ua`: user_agent
 - `gt_ms`: mesaured as the time before and after this middleware call next in the asgi stack.
@@ -29,6 +30,7 @@ Currently this middleware tracks:
 - `action_name` that defaults to path, but can be specified.
 
 You can also pass variable to track by adding an `asgi_matomo`  dict in the `state` dict of the ASGI `scope`:
+
 ```python
 scope = {
   "state": {
@@ -46,6 +48,7 @@ scope = {
 The keys of the `asgi_matomo` dict is expected to be valid parameter for the [Matomo HTTP Tracking API](https://developer.matomo.org/api-reference/tracking-api). `cvar` is serialized with the standard `json` lib.
 
 You can also track time spent on different tasks with `trackers.PerfMsTracker`.
+
 ```python
 import asyncio
 from starlette.applications import Starlette
@@ -120,7 +123,7 @@ def home() -> dict:
 
 ## API Reference
 
-**Overview**
+### Overview
 
 ```python
 app.add_middleware(
@@ -150,40 +153,13 @@ app.add_middleware(
 These are tried after `exclude_paths`.
 - _(Optional)_ `route_details`: A dict with custom route-specific tracking data. Defaults to `None`.
 
-
 **Notes**:
 
 - Currently only some parts [Matomo Tracking HTTP API](https://developer.matomo.org/api-reference/tracking-api) is supported.
 
-## Ideas for further work:
+## Ideas for further work
+
 - [x] _filtering tracked of urls_
 - [x] _custom extraction of tracked data_
 
-
 This project keeps a [changelog](https://github.com/spraakbanken/asgi-matomo/CHANGELOG.md).
-
-# Releas Notes
-
-## Latest Changes
-
-## [0.4.1] - 2023-05-29
-
-### Added
-- track urlref. PR [#21](https://github.com/spraakbanken/asgi-matomo/pull/21) by [@kod-kristoff](https://github.com/kod-kristoff).
-
-### Changed
-- respect x-forwarded-for. PR [#18](https://github.com/spraakbanken/asgi-matomo/pull/18) by [@kod-kristoff](https://github.com/kod-kristoff).
-
-## [0.4.0] - 2023-05-25
-
-* Handle lifespan correctly. PR [#13](https://github.com/spraakbanken/asgi-matomo/pull/13) by [@kod-kristoff](https://github.com/kod-kristoff).
-* add docs. PR [#11](https://github.com/spraakbanken/asgi-matomo/pull/11) by [@kod-kristoff](https://github.com/kod-kristoff).
-## [0.3.2] - 2023-05-23
-
-* feat: add PerfMsTracker. PR [#10](https://github.com/spraakbanken/asgi-matomo/pull/10) by [@kod-kristoff](https://github.com/kod-kristoff).
-
-## [0.3.0] - 2023-05-22
-### Added
-
-- Allow setting route-details
-
