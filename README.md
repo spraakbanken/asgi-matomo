@@ -163,3 +163,7 @@ These are tried after `exclude_paths`.
 - [x] _custom extraction of tracked data_
 
 This project keeps a [changelog](https://github.com/spraakbanken/asgi-matomo/CHANGELOG.md).
+
+## Development
+
+This project uses `pdm` and `pre-commit`.
