@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased]
+
+### Changed
+
+- Use post call for tracking
+
 ## [0.5.0] - 2023-11-06
 
 ### Changed
@@ -19,11 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Track urlref
+- Track urlref. PR [#21](https://github.com/spraakbanken/asgi-matomo/pull/21) by [@kod-kristoff](https://github.com/kod-kristoff).
 
 ### Fixed
 
-- Respect x-forwarded-for
+- Respect x-forwarded-for. PR [#18](https://github.com/spraakbanken/asgi-matomo/pull/18) by [@kod-kristoff](https://github.com/kod-kristoff).
 
 ## [0.4.0] - 2023-05-25
 
@@ -33,13 +39,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Handle lifespan correctly
+- Handle lifespan correctly. PR [#13](https://github.com/spraakbanken/asgi-matomo/pull/13) by [@kod-kristoff](https://github.com/kod-kristoff).
 
 ## [0.3.2] - 2023-05-23
 
 ### Added
 
-- Add PerfMsTracker
+- Add PerfMsTracker. PR [#10](https://github.com/spraakbanken/asgi-matomo/pull/10) by [@kod-kristoff](https://github.com/kod-kristoff).
 
 ### Internal
 
