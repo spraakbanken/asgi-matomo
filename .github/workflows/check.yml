@@ -22,34 +22,38 @@ concurrency:
 jobs:
   fmt:
     runs-on: ubuntu-latest
-    name: ubuntu / fmt
+    name: ubuntu / 3.8 / fmt
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Set up the python ${{ env.MINIMUM_PYTHON_VERSION }}
         uses: pdm-project/setup-pdm@v4
         id: setup-python
         with:
           python-version: ${{ env.MINIMUM_PYTHON_VERSION }}
-      
+
       - name: Load cached venv
         id: cached-venv
         uses: actions/cache@v4
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('.github/workflows/check.yml') }}
-    
+
       - name: Install dependencies
         if: steps.cached-venv.outputs.cache-hit != 'true'
         run: make install-dev
-      
+
       - name: check formatting
         run: make check-fmt
   lint:
     runs-on: ubuntu-latest
-    name: ubuntu / lint
+    name: ubuntu / 3.8 / lint
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
       - name: Set up the python ${{ env.MINIMUM_PYTHON_VERSION }}
         uses: pdm-project/setup-pdm@v4
         id: setup-python
@@ -68,9 +72,11 @@ jobs:
         run: make lint
   type-check:
     runs-on: ubuntu-latest
-    name: ubuntu / type-check
+    name: ubuntu / 3.8 / type-check
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
       - name: Set up the python ${{ env.MINIMUM_PYTHON_VERSION }}
         uses: pdm-project/setup-pdm@v4
         id: setup-python
@@ -91,7 +97,7 @@ jobs:
   # https://github.com/marketplace/actions/alls-green#why used for branch protection checks
   check-check:
     if: always()
-    needs: 
+    needs:
       - fmt
       - lint
       - type-check
