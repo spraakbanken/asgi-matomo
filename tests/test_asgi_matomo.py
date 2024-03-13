@@ -293,7 +293,9 @@ async def test_matomo_client_gets_called_on_post_baz(
 async def test_real_async_client_is_created(settings: dict) -> None:
     app = create_app(None, settings)
     async with LifespanManager(app):
-        async with AsyncClient(app=app, base_url="http://testserver") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app), base_url="http://testserver"
+        ) as client:
             response = await client.get("/health")
             assert response.status_code == 200
 
