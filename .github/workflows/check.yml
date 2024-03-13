@@ -22,7 +22,7 @@ concurrency:
 jobs:
   fmt:
     runs-on: ubuntu-latest
-    name: ubuntu / 3.8 / fmt
+    name: ubuntu / 3.10 / fmt
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,7 +49,7 @@ jobs:
         run: make check-fmt
   lint:
     runs-on: ubuntu-latest
-    name: ubuntu / 3.8 / lint
+    name: ubuntu / 3.10 / lint
     steps:
       - uses: actions/checkout@v4
         with:
@@ -72,7 +72,7 @@ jobs:
         run: make lint
   type-check:
     runs-on: ubuntu-latest
-    name: ubuntu / 3.8 / type-check
+    name: ubuntu / 3.10 / type-check
     steps:
       - uses: actions/checkout@v4
         with:

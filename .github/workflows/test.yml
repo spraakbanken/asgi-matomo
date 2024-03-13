@@ -84,7 +84,7 @@ jobs:
     # This requires the secret `CODECOV_TOKEN` be set as secret on GitHub, both for
     # Actions and Dependabot
 
-    name: "${{ matrix.os }} / 3.8 / doctest"
+    name: "${{ matrix.os }} / 3.10 / doctest"
     strategy:
       max-parallel: 4
       fail-fast: false
