@@ -134,7 +134,9 @@ async def fixture_client_w_token(
     app_w_token: Starlette,
 ) -> AsyncGenerator[AsyncClient, None]:
     async with LifespanManager(app_w_token):
-        async with AsyncClient(app=app_w_token, base_url="http://testserver") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app_w_token), base_url="http://testserver"
+        ) as client:
             yield client
 
 
