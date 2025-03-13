@@ -15,17 +15,6 @@ homepage = "https://spraakbanken.gu.se"
 repository = "https://github.com/spraakbanken/asgi-matomo"
 "Bug Tracker" = "https://github.com/spraakbanken/asgi-matomo/issues"
 
-[project.optional-dependencies]
-ci = ["ruff>=0.1.4"]
-docs = [
-    "mike>=2.0.0",
-    "mkdocs>=1.5.3",
-    "mkdocs-material>=9.4.8",
-    "mdx-include>=1.4.2",
-    "markdown>=3.5.1",
-    "mkdocs-markdownextradata-plugin>=0.2.5",
-]
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -33,14 +22,23 @@ build-backend = "hatchling.build"
 [tool.hatch.metadata]
 allow-direct-references = true
 
-[tool.pdm.dev-dependencies]
+
+[dependency-groups]
 dev = [
-    "pytest>=7.4.4",
-    "starlette>=0.37.0",
-    "pytest-asyncio>=0.23.4",
-    "pytest-cov>=4.1.0",
-    "ruff>=0.2.1",
-    "mypy>=1.8.0",
     "asgi-lifespan>=2.1.0",
-    "bump-my-version>=0.19.0",
+    "bump-my-version>=1.0.2",
+    "mypy>=1.15.0",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.25.3",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.9.10",
+    "starlette>=0.46.1",
+]
+docs = [
+    "mike>=2.0.0",
+    "mkdocs>=1.5.3",
+    "mkdocs-material>=9.4.8",
+    "mdx-include>=1.4.2",
+    "markdown>=3.5.1",
+    "mkdocs-markdownextradata-plugin>=0.2.5",
 ]
