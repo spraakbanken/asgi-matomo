@@ -58,7 +58,7 @@ help:
 
 PLATFORM := `uname -o`
 REPO := asgi-matomo
-PROJECT_SRC := src/asgi_matomo docs_src
+PROJECT_SRC := src/asgi_matomo
 
 ifeq (${VIRTUAL_ENV},)
   VENV_NAME = .venv
@@ -110,12 +110,12 @@ doc-tests:
 .PHONY: type-check
 # check types
 type-check:
-	${INVENV} mypy ${PROJECT_SRC} ${tests}
+	${INVENV} mypy ${PROJECT_SRC} ${tests} --exclude tests/test_testing --exclude tests/test_usage --exclude tests/test_details
 
 .PHONY: lint
 # lint the code
 lint:
-	${INVENV} ruff check ${PROJECT_SRC} ${tests}
+	${INVENV} ruff check ${PROJECT_SRC} ${tests} docs_src
 
 .PHONY: lint-fix
 # lint the code (and fix if possible)

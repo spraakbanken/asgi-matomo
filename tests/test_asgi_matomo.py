@@ -45,7 +45,7 @@ def fixture_settings() -> dict[str, typing.Any]:
 
 
 def create_app(
-    matomo_client: AsyncClient,
+    matomo_client: AsyncClient | None,
     settings: dict[str, typing.Any],
     token: typing.Optional[str] = None,
 ) -> Starlette:

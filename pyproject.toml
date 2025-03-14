@@ -8,10 +8,7 @@ authors = [
 license = "MIT"
 readme = "README.md"
 requires-python = ">= 3.10"
-dependencies = [
-    "asgiref>=3.6.0",
-    "httpx>=0.24",
-]
+dependencies = ["asgiref>=3.6.0", "httpx>=0.24"]
 
 [project.urls]
 homepage = "https://spraakbanken.gu.se"
@@ -46,3 +43,9 @@ docs = [
     "markdown>=3.5.1",
     "mkdocs-markdownextradata-plugin>=0.2.5",
 ]
+
+[tool.hatch.build.targets.sdist]
+exclude = ["/.github", "/docs"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/asgi_matomo"]
