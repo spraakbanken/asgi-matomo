@@ -1,16 +1,13 @@
 import contextlib
-import json
 import time
 import typing
+from collections.abc import AsyncGenerator, MutableMapping
 from dataclasses import dataclass
-from typing import AsyncGenerator
 from unittest import mock
 
 import pytest
 import pytest_asyncio
 from asgi_lifespan import LifespanManager
-from asgi_matomo import MatomoMiddleware
-from asgi_matomo.trackers import PerfMsTracker
 from httpx import ASGITransport, AsyncClient
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
@@ -18,6 +15,11 @@ from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.routing import Route
+from starlette.types import ASGIApp
+from syrupy import matchers
+
+from asgi_matomo import MatomoMiddleware
+from asgi_matomo.trackers import PerfMsTracker
 
 
 @dataclass
@@ -31,18 +33,20 @@ def test_it_works() -> None:
 
 
 @pytest.fixture(name="matomo_client")
-def fixture_matomo_client():
+def fixture_matomo_client() -> mock.AsyncMock:
     client = mock.AsyncMock(AsyncClient)
     client.post = mock.AsyncMock(return_value=MockResponse(status_code=204))
     return client
 
 
 @pytest.fixture(name="settings", scope="session")
-def fixture_settings() -> dict:
+def fixture_settings() -> dict[str, typing.Any]:
     return {"idsite": 1, "base_url": "https://testserver"}
 
 
-def create_app(matomo_client, settings: dict, token: typing.Optional[str] = None) -> Starlette:
+def create_app(
+    matomo_client: AsyncClient, settings: dict[str, typing.Any], token: typing.Optional[str] = None
+) -> Starlette:
     app = Starlette()
 
     app.add_middleware(
@@ -56,16 +60,16 @@ def create_app(matomo_client, settings: dict, token: typing.Optional[str] = None
         route_details={"/foo2": {"action_name": "The real foo", "e_a": "fooing"}},
     )
 
-    async def foo(request):
+    def foo(_request: Request) -> PlainTextResponse:
         return PlainTextResponse("foo")
 
-    async def health(request):
+    def health(_request: Request) -> PlainTextResponse:
         return PlainTextResponse("ok")
 
-    async def old(request):
+    def old(_request: Request) -> PlainTextResponse:
         return PlainTextResponse("old")
 
-    async def custom_var(request: Request):
+    def custom_var(request: Request) -> PlainTextResponse:
         if "state" not in request.scope:
             request.scope["state"] = {}
         request.scope["state"]["asgi_matomo"] = {
@@ -76,10 +80,10 @@ def create_app(matomo_client, settings: dict, token: typing.Optional[str] = None
             time.sleep(0.1)
         return PlainTextResponse("custom_var")
 
-    async def bar(request):
+    def bar(_request: Request) -> PlainTextResponse:
         raise HTTPException(status_code=400, detail="bar")
 
-    async def baz(request):
+    async def baz(request: Request) -> JSONResponse:
         async with PerfMsTracker(scope=request.scope, key="pf_srv"):
             data = await request.json()
         return JSONResponse({"data": data})
@@ -97,17 +101,17 @@ def create_app(matomo_client, settings: dict, token: typing.Optional[str] = None
 
 
 @pytest.fixture(name="app")
-def fixture_app(matomo_client, settings: dict) -> Starlette:
+def fixture_app(matomo_client: AsyncClient, settings: dict[str, typing.Any]) -> Starlette:
     return create_app(matomo_client, settings)
 
 
 @pytest.fixture(name="app_w_token")
-def fixture_app_w_token(matomo_client, settings: dict) -> Starlette:
-    return create_app(matomo_client, settings, token="FAKE-TOKEN")  # noqa: S106
+def fixture_app_w_token(matomo_client: AsyncClient, settings: dict[str, typing.Any]) -> Starlette:
+    return create_app(matomo_client, settings, token="FAKE-TOKEN")
 
 
 @pytest.fixture(name="expected_data")
-def fixture_expected_data(settings: dict) -> dict:
+def fixture_expected_data(settings: dict[str, typing.Any]) -> dict[str, typing.Any]:
     return {
         "idsite": settings["idsite"],
         "url": settings["base_url"],
@@ -121,10 +125,8 @@ def fixture_expected_data(settings: dict) -> dict:
 
 @pytest_asyncio.fixture(name="client")
 async def fixture_client(app: Starlette) -> AsyncGenerator[AsyncClient, None]:
-    async with LifespanManager(app):
-        async with AsyncClient(
-            transport=ASGITransport(app), base_url="http://testserver"
-        ) as client:
+    async with LifespanManager(app):  # noqa: SIM117
+        async with AsyncClient(transport=ASGITransport(app), base_url="http://testserver") as client:
             yield client
 
 
@@ -132,112 +134,104 @@ async def fixture_client(app: Starlette) -> AsyncGenerator[AsyncClient, None]:
 async def fixture_client_w_token(
     app_w_token: Starlette,
 ) -> AsyncGenerator[AsyncClient, None]:
-    async with LifespanManager(app_w_token):
-        async with AsyncClient(
-            transport=ASGITransport(app_w_token), base_url="http://testserver"
-        ) as client:
+    async with LifespanManager(app_w_token):  # noqa: SIM117
+        async with AsyncClient(transport=ASGITransport(app_w_token), base_url="http://testserver") as client:
             yield client
+
+
+def make_matcher(**kwargs):  # noqa: ANN003, ANN201
+    path_types = {"gt_ms": (float,), "rand": (int,)}
+    if kwargs:
+        path_types.update(kwargs)
+    return matchers.path_type(path_types)
 
 
 @pytest.mark.asyncio
 async def test_middleware_w_token_tracks_cip(
-    client_w_token: AsyncClient, matomo_client, expected_data: dict
-):
+    client_w_token: AsyncClient,
+    matomo_client: mock.AsyncMock,
+    snapshot_json,  # noqa: ANN001
+) -> None:
     response = await client_w_token.get("/foo")
     assert response.status_code == 200
 
     matomo_client.post.assert_awaited()
 
-    expected_data["url"] += "/foo"
-    expected_data["action_name"] = "/foo"
-    expected_data["cip"] = "127.0.0.1"
-    expected_data["token_auth"] = "FAKE-TOKEN"  # noqa: S105
-    assert_post_data(matomo_client.post.await_args.kwargs["data"], expected_data)
+    assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher())
 
 
 @pytest.mark.asyncio
 async def test_middleware_w_token_respects_x_forwarded_for(
-    client_w_token: AsyncClient, matomo_client, expected_data: dict
-):
+    client_w_token: AsyncClient,
+    matomo_client: mock.AsyncMock,
+    snapshot_json,  # noqa: ANN001
+) -> None:
     response = await client_w_token.get("/foo", headers={"x-forwarded-for": "127.0.0.2"})
     assert response.status_code == 200
 
     matomo_client.post.assert_awaited()
 
-    expected_data["url"] += "/foo"
-    expected_data["action_name"] = "/foo"
-    expected_data["cip"] = "127.0.0.2"
-    expected_data["token_auth"] = "FAKE-TOKEN"  # noqa: S105
-    assert_post_data(matomo_client.post.await_args.kwargs["data"], expected_data)
+    assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher())
 
 
 @pytest.mark.asyncio
-async def test_middleware_tracks_urlref(client: AsyncClient, matomo_client, expected_data: dict):
+async def test_middleware_tracks_urlref(client: AsyncClient, matomo_client: mock.AsyncMock, snapshot_json) -> None:  # noqa: ANN001
     response = await client.get("/foo", headers={"referer": "https://example.com"})
     assert response.status_code == 200
 
     matomo_client.post.assert_awaited()
 
-    expected_data["url"] += "/foo"
-    expected_data["action_name"] = "/foo"
-    expected_data["urlref"] = b"https://example.com"
-    assert_post_data(matomo_client.post.await_args.kwargs["data"], expected_data)
+    assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher())
 
 
 @pytest.mark.asyncio
 async def test_matomo_client_gets_called_on_get_foo(
-    client: AsyncClient, matomo_client, expected_data: dict
-):
+    client: AsyncClient,
+    matomo_client: mock.AsyncMock,
+    snapshot_json,  # noqa: ANN001
+) -> None:
     response = await client.get("/foo")
     assert response.status_code == 200
 
     matomo_client.post.assert_awaited()
 
-    expected_data["url"] += "/foo"
-    expected_data["action_name"] = "/foo"
-    assert_post_data(matomo_client.post.await_args.kwargs["data"], expected_data)
+    assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher())
 
 
 @pytest.mark.asyncio
 async def test_matomo_client_gets_called_on_get_bar(
-    client: AsyncClient, matomo_client, expected_data: dict
-):
+    client: AsyncClient,
+    matomo_client: mock.AsyncMock,
+    snapshot_json,  # noqa: ANN001
+) -> None:
     with contextlib.suppress(ValueError):
         _response = await client.get("/bar")
     # assert response.status_code == 200
 
     matomo_client.post.assert_awaited()
 
-    expected_data["url"] += "/bar"
-    expected_data["action_name"] = "/bar"
-    expected_data["cvar"] = expected_data["cvar"].replace("200", "400")
-
-    assert_post_data(matomo_client.post.await_args.kwargs["data"], expected_data)
+    assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher())
 
 
 @pytest.mark.asyncio
 async def test_matomo_client_gets_called_on_get_custom_var(
-    client: AsyncClient, matomo_client, expected_data: dict
-):
+    client: AsyncClient,
+    matomo_client: mock.AsyncMock,
+    snapshot_json,  # noqa: ANN001
+) -> None:
     response = await client.get("/set/custom/var")
     assert response.status_code == 200
 
     matomo_client.post.assert_awaited()
 
-    expected_data["url"] += "/set/custom/var"
-    expected_data["e_a"] = "Playing"
-    expected_data["pf_srv"] = 90000
-    expected_data["action_name"] = "/set/custom/var"
-    expected_data["cvar"] = '{"http_status_code": 200, "http_method": "GET", "anything": "goes"}'
-
-    assert_post_data(matomo_client.post.await_args.kwargs["data"], expected_data)
+    assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher(pf_srv=(float,)))
 
 
 @pytest.mark.asyncio
 async def test_matomo_client_doesnt_gets_called_on_get_health(
     client: AsyncClient,
-    matomo_client,
-):
+    matomo_client: mock.AsyncMock,
+) -> None:
     response = await client.get("/health")
     assert response.status_code == 200
 
@@ -247,84 +241,56 @@ async def test_matomo_client_doesnt_gets_called_on_get_health(
 @pytest.mark.parametrize("path", ["/some/old/path", "/old/path", "/really/old"])
 @pytest.mark.asyncio
 async def test_matomo_client_doesnt_gets_called_on_get_old(
-    client: AsyncClient, matomo_client, path: str
-):
+    client: AsyncClient, matomo_client: mock.AsyncMock, path: str
+) -> None:
     response = await client.get(path)
     assert response.status_code == 200
 
     matomo_client.post.assert_not_awaited()
 
 
-def assert_post_data(actual_data: dict, expected_data: dict) -> None:
-    print(f"{actual_data=}")
-    print(f"{expected_data=}")
-    assert actual_data.pop("rand") is not None
-    assert actual_data.pop("gt_ms") is not None
-    assert actual_data.pop("ua").decode("utf-8").startswith("python-httpx")
-    cvar = actual_data.pop("cvar")
-    # if expected_lower_limit := expected_data.pop("pf_srv", None):
-    #     assert float(actual_data.pop("pf_srv")) >= expected_lower_limit
-    expected_cvar = expected_data.pop("cvar")
-    if "pf_srv" in expected_data:
-        expected_lower_limit = expected_data.pop("pf_srv")
-        assert float(actual_data.pop("pf_srv")) >= expected_lower_limit
-
-    assert actual_data == expected_data
-    assert json.loads(cvar) == json.loads(expected_cvar)
-
-
 @pytest.mark.asyncio
 async def test_matomo_client_gets_called_on_post_baz(
-    client: AsyncClient, matomo_client, expected_data: dict
-):
+    client: AsyncClient,
+    matomo_client: mock.AsyncMock,
+    snapshot_json,  # noqa: ANN001
+) -> None:
     response = await client.post("/baz", json={"data": "content"})
     assert response.status_code == 200
 
-    expected_data["url"] += "/baz"
-    expected_data["action_name"] = "/baz"
-    expected_data["pf_srv"] = 20
-    expected_data["cvar"] = expected_data["cvar"].replace("GET", "POST")
     matomo_client.post.assert_awaited()
 
-    assert_post_data(matomo_client.post.await_args.kwargs["data"], expected_data)
+    assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher(pf_srv=(float,)))
 
 
 @pytest.mark.asyncio
-async def test_real_async_client_is_created(settings: dict) -> None:
+async def test_real_async_client_is_created(settings: dict[str, typing.Any]) -> None:
     app = create_app(None, settings)
-    async with LifespanManager(app):
-        async with AsyncClient(
-            transport=ASGITransport(app), base_url="http://testserver"
-        ) as client:
+    async with LifespanManager(app):  # noqa: SIM117
+        async with AsyncClient(transport=ASGITransport(app), base_url="http://testserver") as client:
             response = await client.get("/health")
             assert response.status_code == 200
 
 
 @pytest.mark.asyncio
-async def test_foo2_has_custom_action_name(
-    client: AsyncClient, matomo_client, expected_data: dict
-) -> None:
+async def test_foo2_has_custom_action_name(client: AsyncClient, matomo_client: mock.AsyncMock, snapshot_json) -> None:  # noqa: ANN001
     response = await client.get("/foo2")
     assert response.status_code == 200
 
-    expected_data["url"] += "/foo2"
-    expected_data["action_name"] = "The real foo"
-    expected_data["e_a"] = "fooing"
-
     matomo_client.post.assert_awaited()
 
-    assert_post_data(matomo_client.post.await_args.kwargs["data"], expected_data)
+    assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher())
 
 
 @pytest.mark.asyncio
-async def test_middleware_handles_lifespan_startups_errors():
+async def test_middleware_handles_lifespan_startups_errors() -> None:
     # sourcery skip: remove-unreachable-code
     @contextlib.asynccontextmanager
-    async def custom_lifespan(app):
+    async def custom_lifespan(_app: ASGIApp):  # noqa: ANN202, RUF029
         raise RuntimeError("startup failure")
         yield
 
-    async def homepage(request):
+    async def homepage(_request: Request):  # noqa: ANN202, RUF029
         return JSONResponse({"a": "b"})
 
     app = Starlette(
@@ -347,29 +313,29 @@ async def test_middleware_handles_lifespan_startups_errors():
         "state": {},
     }
 
-    async def receive():
+    async def receive() -> dict[str, str]:  # noqa: RUF029
         return {"type": "lifespan.startup"}
 
-    async def send(message) -> None:
-        assert message["type"] in (
+    async def send(message: MutableMapping[str, typing.Any]) -> None:  # noqa: RUF029
+        assert message["type"] in {
             "lifespan.startup.complete",
             "lifespan.startup.failed",
             "lifespan.shutdown.complete",
             "lifespan.shutdown.failed",
-        )
+        }
 
     with pytest.raises(RuntimeError, match="startup failure"):
         await app(lifespan_scope, receive, send)
 
 
 @pytest.mark.asyncio
-async def test_middleware_handles_lifespan_shutdown_errors():
+async def test_middleware_handles_lifespan_shutdown_errors() -> None:
     @contextlib.asynccontextmanager
-    async def custom_lifespan(app):
+    async def custom_lifespan(_app: ASGIApp):  # noqa: ANN202, RUF029
         yield
         raise RuntimeError("shutdown failure")
 
-    async def homepage(request):
+    async def homepage(_request: Request) -> JSONResponse:  # noqa: RUF029
         return JSONResponse({"a": "b"})
 
     app = Starlette(
@@ -392,16 +358,16 @@ async def test_middleware_handles_lifespan_shutdown_errors():
         "state": {},
     }
 
-    async def receive():
+    async def receive() -> dict[str, typing.Any]:  # noqa: RUF029
         return {"type": "lifespan.shutdown"}
 
-    async def send(message) -> None:
-        assert message["type"] in (
+    async def send(message: MutableMapping[str, typing.Any]) -> None:  # noqa: RUF029
+        assert message["type"] in {
             "lifespan.startup.complete",
             "lifespan.startup.failed",
             "lifespan.shutdown.complete",
             "lifespan.shutdown.failed",
-        )
+        }
 
     with pytest.raises(RuntimeError, match="shutdown failure"):
         await app(lifespan_scope, receive, send)
