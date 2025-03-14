@@ -58,7 +58,7 @@ help:
 
 PLATFORM := `uname -o`
 REPO := asgi-matomo
-PROJECT_SRC := src/asgi_matomo
+PROJECT_SRC := src/asgi_matomo docs_src
 
 ifeq (${VIRTUAL_ENV},)
   VENV_NAME = .venv

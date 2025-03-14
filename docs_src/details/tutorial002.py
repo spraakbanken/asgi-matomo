@@ -1,12 +1,16 @@
-from asgi_matomo import MatomoMiddleware
+"""Example showing how to adjust what is tracked during a request."""
+
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
+from asgi_matomo import MatomoMiddleware
 
-async def foo(request: Request):
+
+async def foo(request: Request) -> JSONResponse:  # noqa: RUF029
+    """Store custom data during a request."""
     if "state" not in request.scope:
         request.scope["state"] = {}
     request.scope["state"]["asgi_matomo"] = {

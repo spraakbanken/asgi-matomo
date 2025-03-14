@@ -45,7 +45,9 @@ def fixture_settings() -> dict[str, typing.Any]:
 
 
 def create_app(
-    matomo_client: AsyncClient, settings: dict[str, typing.Any], token: typing.Optional[str] = None
+    matomo_client: AsyncClient,
+    settings: dict[str, typing.Any],
+    token: typing.Optional[str] = None,
 ) -> Starlette:
     app = Starlette()
 
@@ -108,19 +110,6 @@ def fixture_app(matomo_client: AsyncClient, settings: dict[str, typing.Any]) -> 
 @pytest.fixture(name="app_w_token")
 def fixture_app_w_token(matomo_client: AsyncClient, settings: dict[str, typing.Any]) -> Starlette:
     return create_app(matomo_client, settings, token="FAKE-TOKEN")
-
-
-@pytest.fixture(name="expected_data")
-def fixture_expected_data(settings: dict[str, typing.Any]) -> dict[str, typing.Any]:
-    return {
-        "idsite": settings["idsite"],
-        "url": settings["base_url"],
-        "apiv": 1,
-        # "lang": ["None"]
-        "rec": 1,
-        "send_image": 0,
-        "cvar": '{"http_status_code": 200, "http_method": "GET"}',
-    }
 
 
 @pytest_asyncio.fixture(name="client")
