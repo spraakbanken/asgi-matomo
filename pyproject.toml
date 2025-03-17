@@ -9,7 +9,11 @@ authors = [
 license = "MIT"
 readme = "README.md"
 requires-python = ">= 3.10"
-dependencies = ["asgiref>=3.6.0", "httpx>=0.24"]
+dependencies = [
+    "asgiref>=3.6.0",
+ "httpx>=0.24",
+ "matomo-core>=0.1.0",
+]
 
 [project.urls]
 homepage = "https://spraakbanken.gu.se"
