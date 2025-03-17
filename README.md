@@ -166,4 +166,4 @@ This project keeps a [changelog](https://github.com/spraakbanken/asgi-matomo/CHA
 
 ## Development
 
-This project uses `pdm` and `pre-commit`.
+This project uses `uv` and `pre-commit`.
