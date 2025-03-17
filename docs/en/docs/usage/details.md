@@ -51,3 +51,7 @@ So we use `PerfMsTracker` as a context manager and the time is recorded between 
 ## Customize the client use to call Matomo
 
 You can use a custom http client (must use the same API as `httpx.AsyncClient`). You can also set the timeout used with the default client by supplying `http_timeout` to the constructor.
+
+## Customize tracking based on HTTP method
+
+You can specify what HTTP methods to allow with `allowed_methods`, and what methods that should be ignored with `ignored_methods`. Ignored methods takes precedence over allowed methods.

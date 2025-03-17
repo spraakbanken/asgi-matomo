@@ -60,6 +60,8 @@ def create_app(
         exclude_paths=["/health"],
         exclude_patterns=[".*/old.*"],
         route_details={"/foo2": {"action_name": "The real foo", "e_a": "fooing"}},
+        allowed_methods=["GET", "PoST", "HEAD", "OPTIONS"],
+        ignored_methods=["OptiOns"],
     )
 
     def foo(_request: Request) -> PlainTextResponse:
@@ -90,7 +92,7 @@ def create_app(
             data = await request.json()
         return JSONResponse({"data": data})
 
-    app.add_route("/foo", foo)
+    app.add_route("/foo", foo, methods=["GET", "OPTIONS", "PUT"])
     app.add_route("/foo2", foo)
     app.add_route("/bar", bar)
     app.add_route("/health", health)
@@ -185,6 +187,26 @@ async def test_matomo_client_gets_called_on_get_foo(
     matomo_client.post.assert_awaited()
 
     assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher())
+
+
+@pytest.mark.asyncio
+async def test_matomo_client_is_not_called_when_method_should_be_ignored(
+    client: AsyncClient, matomo_client: mock.Mock
+) -> None:
+    response = await client.options("/foo")
+    assert response.status_code == 200
+
+    matomo_client.post.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_matomo_client_is_not_called_when_method_is_not_allowed(
+    client: AsyncClient, matomo_client: mock.Mock
+) -> None:
+    response = await client.put("/foo")
+    assert response.status_code == 200
+
+    matomo_client.post.assert_not_called()
 
 
 @pytest.mark.asyncio

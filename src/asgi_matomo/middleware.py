@@ -10,9 +10,10 @@ import typing
 import urllib.parse
 from collections.abc import AsyncIterator
 from contextlib import AsyncExitStack, asynccontextmanager
-from typing import Any
+from typing import Any, Literal
 
 import httpx
+import matomo_core.constants
 from asgiref.typing import (
     ASGI3Application,
     ASGIReceiveCallable,
@@ -58,6 +59,8 @@ class MatomoMiddleware:
         exclude_paths: list[str] | None = None,
         exclude_patterns: list[str] | None = None,
         route_details: dict[str, dict[str, str]] | None = None,
+        allowed_methods: list[str] | Literal["all-methods"] = "all-methods",
+        ignored_methods: list[str] | None = None,
     ) -> None:
         """Initialize the Matomo middleware.
 
@@ -74,6 +77,8 @@ class MatomoMiddleware:
             exclude_paths: exclude these paths
             exclude_patterns: exclude paths based on these regex patterns
             route_details: mapping of details for each path
+            allowed_methods: list of methods to track or "all-methods". Default: "all-methods".
+            ignored_methods: list of methods to ignore, takes precedence over allowed methods. Default: None.
         """
         self.app = app
         self.matomo_url = matomo_url
@@ -85,6 +90,12 @@ class MatomoMiddleware:
         self.exclude_paths = set(exclude_paths or [])
         self.compiled_patterns = [re.compile(pattern) for pattern in (exclude_patterns or [])]
         self.route_details = route_details or {}
+        self.allowed_methods: set[str] = set()
+        if allowed_methods == "all-methods":
+            self.allowed_methods = matomo_core.constants.HTTP_METHODS
+        elif allowed_methods:
+            self.allowed_methods.update(method.upper() for method in allowed_methods)
+        self.ignored_methods: set[str] = {method.upper() for method in ignored_methods} if ignored_methods else set()
 
     async def startup(self) -> None:
         """Prepare this middleware for use."""
@@ -206,8 +217,14 @@ class MatomoMiddleware:
         if "asgi_matomo" not in scope["state"]:  # type: ignore
             scope["state"]["asgi_matomo"] = {}  # type: ignore
         path = scope["path"]
+
         dont_track_this = False
-        if path in self.exclude_paths or any(pattern.match(path) for pattern in self.compiled_patterns):
+        if (
+            path in self.exclude_paths
+            or scope["method"] in self.ignored_methods
+            or scope["method"] not in self.allowed_methods
+            or any(pattern.match(path) for pattern in self.compiled_patterns)
+        ):
             logger.debug("excluding path='%s'", path, extra={"path": path})
             dont_track_this = True
 

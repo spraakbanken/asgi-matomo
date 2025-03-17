@@ -155,6 +155,8 @@ app.add_middleware(
   }
   client=None,
   http_timeout=5,
+  allowed_methods="all-methods",
+  ignored_methods=None
 )
 ```
 
@@ -170,6 +172,8 @@ These are tried after `exclude_paths`.
 - _(Optional)_ `route_details`: A dict with custom route-specific tracking data. Defaults to `None`.
 - _(Optional)_ `client`: A custom http client to use (must use the same API as `httpx.Client`). Defaults to `None`, a client is created.
 - _(Optional)_ `http_timeout`: Timeout to use for the client being created. Ignored if a custom client is provided. Defaults to `5`. 
+- _(Optional)_ `allowed_methods`: List of HTTP methods that should be tracked. Defaults to `"all-methods"`.
+- _(Optional)_ `ignored_methods`: List of HTTP methods to ignored. Ignored methods takes precedence over allowed methods. Defaults to `None`.
 
 **Notes**:
 
