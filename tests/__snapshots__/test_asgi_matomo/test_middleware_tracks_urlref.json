@@ -1,0 +1,13 @@
+{
+  "action_name": "/foo",
+  "apiv": 1,
+  "cvar": "{\"http_status_code\": 200, \"http_method\": \"GET\"}",
+  "gt_ms": "float",
+  "idsite": 1,
+  "rand": "int",
+  "rec": 1,
+  "send_image": 0,
+  "ua": "b'python-httpx/0.28.1'",
+  "url": "https://testserver/foo",
+  "urlref": "b'https://example.com'"
+}

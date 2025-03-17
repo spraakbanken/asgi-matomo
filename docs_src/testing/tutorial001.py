@@ -1,36 +1,31 @@
-import contextlib
-import time
-from dataclasses import dataclass
-from typing import AsyncGenerator
-from unittest import mock
-from urllib.parse import parse_qs, urlsplit
+"""Example showing testing of MatomoMiddleware."""
 
-import pytest
-import pytest_asyncio
-from asgi_lifespan import LifespanManager
-from asgi_matomo import MatomoMiddleware
-from asgi_matomo.trackers import PerfMsTracker
+from dataclasses import dataclass
+from unittest import mock
+
 from httpx import AsyncClient
 from starlette.applications import Starlette
-from starlette.exceptions import HTTPException
 from starlette.requests import Request
-from starlette.responses import JSONResponse, PlainTextResponse
+from starlette.responses import PlainTextResponse
 from starlette.testclient import TestClient
+
+from asgi_matomo import MatomoMiddleware
 
 
 @dataclass
-class MockResponse:
+class MockResponse:  # noqa: D101
     status_code: int
     text: str = "response"
 
 
-def create_matomo_client():
+def create_matomo_client() -> mock.AsyncMock:  # noqa: D103
     matomo_client = mock.AsyncMock(AsyncClient)
     matomo_client.post = mock.AsyncMock(return_value=MockResponse(status_code=204))
     return matomo_client
 
 
-def create_app(matomo_client) -> Starlette:
+def create_app(matomo_client: AsyncClient) -> Starlette:
+    """Craeates the app."""
     app = Starlette()
 
     app.add_middleware(
@@ -40,7 +35,7 @@ def create_app(matomo_client) -> Starlette:
         idsite=12345,
     )
 
-    async def foo(request):
+    def foo(_request: Request) -> PlainTextResponse:
         return PlainTextResponse("foo")
 
     app.add_route("/foo", foo)
@@ -51,9 +46,10 @@ matomo_client = create_matomo_client()
 app = create_app(matomo_client)
 
 
-def test_app():
+def test_app() -> None:
+    """Test that the matomo_client is called."""
     client = TestClient(app)
     response = client.get("/foo")
-    assert response.status_code == 200  # noqa: S101
+    assert response.status_code == 200  # noqa: PLR2004
 
     matomo_client.post.assert_awaited()

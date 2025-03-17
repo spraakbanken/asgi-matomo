@@ -1,3 +1,5 @@
+"""Matomo middleware for ASGI apps."""
+
 import json
 import logging
 import random
@@ -6,8 +8,9 @@ import time
 import traceback
 import typing
 import urllib.parse
+from collections.abc import AsyncIterator
 from contextlib import AsyncExitStack, asynccontextmanager
-from typing import Any, AsyncIterator
+from typing import Any
 
 import httpx
 from asgiref.typing import (
@@ -26,7 +29,7 @@ _T = typing.TypeVar("_T")
 
 
 class _DefaultLifespan:
-    def __init__(self, app: "MatomoMiddleware"):
+    def __init__(self, app: "MatomoMiddleware") -> None:
         self._app = app
 
     async def __aenter__(self) -> None:
@@ -35,16 +38,18 @@ class _DefaultLifespan:
     async def __aexit__(self, *exc_info: object) -> None:
         await self._app.shutdown()
 
-    def __call__(self: _T, app: object) -> _T:
+    def __call__(self: _T, app: object) -> _T:  # noqa: ARG002
         return self
 
 
 class MatomoMiddleware:
+    """Matomo middleware."""
+
     def __init__(
         self,
         app: ASGI3Application,
         *,
-        matomo_url,
+        matomo_url: str,
         idsite: int,
         access_token: str | None = None,
         assume_https: bool = True,
@@ -53,6 +58,21 @@ class MatomoMiddleware:
         exclude_patterns: list[str] | None = None,
         route_details: dict[str, dict[str, str]] | None = None,
     ) -> None:
+        """Initialize the Matomo middleware.
+
+        Args:
+            app: Asgi app to use this middleware for
+            matomo_url: url to call
+            idsite: id of the site that should be tracked on Matomo
+            access_token: token that can be found in the area API in the settings of Matomo
+            assume_https: use https when building the tracked url. Default: True.
+            client: http-client to use for tracking the requests.
+                Must use the same api as `httpx.AsyncClient`.
+                Default: creates `httpx.AsyncClient`
+            exclude_paths: exclude these paths
+            exclude_patterns: exclude paths based on these regex patterns
+            route_details: mapping of details for each path
+        """
         self.app = app
         self.matomo_url = matomo_url
         self.idsite = idsite
@@ -65,21 +85,19 @@ class MatomoMiddleware:
         self.route_details = route_details or {}
 
     async def startup(self) -> None:
+        """Prepare this middleware for use."""
         if self.client is None:
             self.client = httpx.AsyncClient()
-        print("middleware startup: done")
 
     async def shutdown(self) -> None:
+        """Shut down http client properly."""
         if self.client is not None:
             await self.client.aclose()
-        print("middleware shutdown: done")
 
-    async def lifespan(
-        self, scope: HTTPScope, receive: ASGIReceiveCallable, send: ASGISendCallable
-    ) -> None:
-        """
-        Handle ASGI lifespan messages, which allows us to manage application
-        startup and shutdown events.
+    async def lifespan(self, scope: HTTPScope, receive: ASGIReceiveCallable, send: ASGISendCallable) -> None:
+        """Handle ASGI lifespan messages.
+
+        This allows us to manage application startup and shutdown events.
 
         Code borrowed from: https://github.com/adriangb/asgi-lifespan
         """
@@ -137,11 +155,8 @@ class MatomoMiddleware:
                 #    (it sends a "lifespan.startup.failed" message)
                 #    in this case we'll run our teardown and then return
                 await self.app(scope, wrapped_rcv, wrapped_send)
-            except BaseException:  # noqa: BLE001
-                if (
-                    "lifespan.startup.failed" in send_events
-                    or "lifespan.shutdown.failed" in send_events
-                ):
+            except BaseException:
+                if "lifespan.startup.failed" in send_events or "lifespan.shutdown.failed" in send_events:
                     # the app tried to start and failed
                     # this app re-raises the exceptions (Starlette does this)
                     # re-raise so that our teardown is triggered
@@ -165,15 +180,14 @@ class MatomoMiddleware:
         # even if the app sent this, we intercepted it and discarded it until we were done
         # await send({"type": "lifespan.shutdown.complete"})
 
-    async def __call__(
-        self, scope: HTTPScope, receive: ASGIReceiveCallable, send: ASGISendCallable
-    ) -> Any:
+    async def __call__(self, scope: HTTPScope, receive: ASGIReceiveCallable, send: ASGISendCallable) -> Any:
+        """Handle request."""
         # locals inside the app function (send_wrapper) can't be assigned to,
         # as the interpreter detects the assignment and thus creates a new
         # local variable within that function, with that name.
         instance = {"http_status_code": 500}
 
-        def send_wrapper(response):
+        def send_wrapper(response: ASGISendEvent) -> Any:
             if response["type"] == "http.response.start":
                 instance["http_status_code"] = response["status"]
             return send(response)
@@ -194,10 +208,7 @@ class MatomoMiddleware:
             scope["state"]["asgi_matomo"] = {}  # type: ignore
         path = scope["path"]
         dont_track_this = False
-        if path in self.exclude_paths:
-            logger.debug("excluding path='%s'", path, extra={"path": path})
-            dont_track_this = True
-        elif any(pattern.match(path) for pattern in self.compiled_patterns):
+        if path in self.exclude_paths or any(pattern.match(path) for pattern in self.compiled_patterns):
             logger.debug("excluding path='%s'", path, extra={"path": path})
             dont_track_this = True
 
@@ -228,11 +239,7 @@ class MatomoMiddleware:
 
             if "state" in scope and "asgi_matomo" in scope["state"]:  # type: ignore
                 for field, value in scope["state"]["asgi_matomo"].items():  # type: ignore
-                    if (
-                        field in tracking_data
-                        and isinstance(tracking_data[field], dict)
-                        and isinstance(value, dict)
-                    ):
+                    if field in tracking_data and isinstance(tracking_data[field], dict) and isinstance(value, dict):
                         tracking_data[field].update(value)  # type: ignore
                     else:
                         tracking_data[field] = value
@@ -248,9 +255,7 @@ class MatomoMiddleware:
                 if self.client is None:
                     logger.error("self.client is not set, can't track request")
                 else:
-                    tracking_response = await self.client.post(
-                        self.matomo_url, data=tracking_data
-                    )
+                    tracking_response = await self.client.post(self.matomo_url, data=tracking_data)
                     logger.debug(
                         "tracking response",
                         extra={
@@ -258,7 +263,7 @@ class MatomoMiddleware:
                             "content": tracking_response.text,
                         },
                     )
-                    if tracking_response.status_code >= 300:
+                    if tracking_response.status_code >= 300:  # noqa: PLR2004
                         logger.error(
                             "Tracking call failed (status_code=%d)",
                             tracking_response.status_code,
@@ -270,7 +275,7 @@ class MatomoMiddleware:
             except httpx.HTTPError:
                 logger.exception("Error tracking view")
 
-    def _build_tracking_state(self, scope: HTTPScope) -> dict:
+    def _build_tracking_state(self, scope: HTTPScope) -> dict[str, Any]:
         server = None
         user_agent = None
         accept_lang = None

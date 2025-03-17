@@ -5,7 +5,7 @@ on:
     branches:
       - main
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - "v[0-9]+.[0-9]+.[0-9]+"
   pull_request:
   merge_group:
 
@@ -17,6 +17,7 @@ permissions:
 
 env:
   MINIMUM_PYTHON_VERSION: "3.10"
+  UV_VERSION: "0.5.15"
 
 jobs:
   build:
@@ -37,10 +38,19 @@ jobs:
       #  -----  setup python   -----
       #----------------------------------------------
       - name: Set up the environment
-        uses: pdm-project/setup-pdm@v4
+        uses: actions/setup-python@v5
         id: setup-python
         with:
           python-version: ${{ env.MINIMUM_PYTHON_VERSION }}
+
+      #----------------------------------------------
+      #  -----  setup uv and load cache   -----
+      #----------------------------------------------
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
 
       #----------------------------------------------
       #  -----  build distribution -----
@@ -88,7 +98,7 @@ jobs:
           name: pypi_files
           path: dist
 
-      - run: rm -r src
+      - run: rm -r src/asgi_matomo
       - run: pip install typing-extensions
       - run: pip install -r tests/requirements-testing.lock
       - run: pip install asgi-matomo --no-index --no-deps --find-links dist --force-reinstall
