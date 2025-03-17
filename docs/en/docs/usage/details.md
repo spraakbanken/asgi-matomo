@@ -47,3 +47,7 @@ So we use `PerfMsTracker` as a context manager and the time is recorded between 
 
 !!! note
     `PerfMsTracker` can also be used as an async context manager if that is needed.
+
+## Customize the client use to call Matomo
+
+You can use a custom http client (must use the same API as `httpx.AsyncClient`). You can also set the timeout used with the default client by supplying `http_timeout` to the constructor.
