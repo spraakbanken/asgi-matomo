@@ -54,6 +54,7 @@ class MatomoMiddleware:
         access_token: str | None = None,
         assume_https: bool = True,
         client: httpx.AsyncClient | None = None,
+        http_timeout: int | None = 5,
         exclude_paths: list[str] | None = None,
         exclude_patterns: list[str] | None = None,
         route_details: dict[str, dict[str, str]] | None = None,
@@ -69,6 +70,7 @@ class MatomoMiddleware:
             client: http-client to use for tracking the requests.
                 Must use the same api as `httpx.AsyncClient`.
                 Default: creates `httpx.AsyncClient`
+            http_timeout: the timeout to use for requests. Ignored if a custom client is provided.
             exclude_paths: exclude these paths
             exclude_patterns: exclude paths based on these regex patterns
             route_details: mapping of details for each path
@@ -79,20 +81,17 @@ class MatomoMiddleware:
         self.assume_https = assume_https
         self.access_token = access_token
         self.lifespan_context = _DefaultLifespan(self)
-        self.client = client
+        self.client = client or httpx.AsyncClient(timeout=http_timeout)
         self.exclude_paths = set(exclude_paths or [])
         self.compiled_patterns = [re.compile(pattern) for pattern in (exclude_patterns or [])]
         self.route_details = route_details or {}
 
     async def startup(self) -> None:
         """Prepare this middleware for use."""
-        if self.client is None:
-            self.client = httpx.AsyncClient()
 
     async def shutdown(self) -> None:
         """Shut down http client properly."""
-        if self.client is not None:
-            await self.client.aclose()
+        await self.client.aclose()
 
     async def lifespan(self, scope: HTTPScope, receive: ASGIReceiveCallable, send: ASGISendCallable) -> None:
         """Handle ASGI lifespan messages.

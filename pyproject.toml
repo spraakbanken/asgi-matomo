@@ -26,7 +26,6 @@ allow-direct-references = true
 [dependency-groups]
 dev = [
     "asgi-lifespan>=2.1.0",
-    "bump-my-version>=1.0.2",
     "mypy>=1.15.0",
     "pytest>=8.3.5",
     "pytest-asyncio>=0.25.3",
