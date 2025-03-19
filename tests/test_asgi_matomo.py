@@ -76,7 +76,7 @@ def create_app(
     def custom_var(request: Request) -> PlainTextResponse:
         if "state" not in request.scope:
             request.scope["state"] = {}
-        request.scope["state"]["asgi_matomo"] = {
+        request.scope["state"]["asgi_matomo"]["custom_tracking_data"] = {
             "e_a": "Playing",
             "cvar": {"anything": "goes"},
         }
@@ -87,6 +87,9 @@ def create_app(
     def bar(_request: Request) -> PlainTextResponse:
         raise HTTPException(status_code=400, detail="bar")
 
+    def bar2(_request: Request) -> PlainTextResponse:
+        raise RuntimeError("raised from bar2")
+
     async def baz(request: Request) -> JSONResponse:
         async with PerfMsTracker(scope=request.scope, key="pf_srv"):
             data = await request.json()
@@ -95,6 +98,7 @@ def create_app(
     app.add_route("/foo", foo, methods=["GET", "OPTIONS", "PUT"])
     app.add_route("/foo2", foo)
     app.add_route("/bar", bar)
+    app.add_route("/bar2", bar2)
     app.add_route("/health", health)
     app.add_route("/some/old/path", old)
     app.add_route("/old/path", old)
@@ -217,6 +221,21 @@ async def test_matomo_client_gets_called_on_get_bar(
 ) -> None:
     with contextlib.suppress(ValueError):
         _response = await client.get("/bar")
+    # assert response.status_code == 200
+
+    matomo_client.post.assert_awaited()
+
+    assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher())
+
+
+@pytest.mark.asyncio
+async def test_matomo_client_gets_called_on_get_bar2(
+    client: AsyncClient,
+    matomo_client: mock.AsyncMock,
+    snapshot_json,  # noqa: ANN001
+) -> None:
+    with contextlib.suppress(RuntimeError):
+        _response = await client.get("/bar2")
     # assert response.status_code == 200
 
     matomo_client.post.assert_awaited()

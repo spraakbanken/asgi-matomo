@@ -215,7 +215,7 @@ class MatomoMiddleware:
             scope["state"] = {}  # type: ignore
 
         if "asgi_matomo" not in scope["state"]:  # type: ignore
-            scope["state"]["asgi_matomo"] = {}  # type: ignore
+            scope["state"]["asgi_matomo"] = {"tracking_data": {}}  # type: ignore
         path = scope["path"]
 
         dont_track_this = False
@@ -234,10 +234,11 @@ class MatomoMiddleware:
             return
 
         start_time_ns = time.perf_counter_ns()
-
+        exc: Exception | None = None
         try:
             await self.app(scope, receive, send_wrapper)
-        except Exception:
+        except Exception as error:
+            exc = error
             raise
         finally:
             end_time_ns = time.perf_counter_ns()
@@ -253,13 +254,17 @@ class MatomoMiddleware:
                 }
             )
 
-            if "state" in scope and "asgi_matomo" in scope["state"]:  # type: ignore
-                for field, value in scope["state"]["asgi_matomo"].items():  # type: ignore
-                    if field in tracking_data and isinstance(tracking_data[field], dict) and isinstance(value, dict):
-                        tracking_data[field].update(value)  # type: ignore
-                    else:
-                        tracking_data[field] = value
-
+            tracking_state = scope.get("state", {}).get("asgi_matomo", {})  # type: ignore
+            for field, value in tracking_state.get("tracking_data", {}).items():  # type: ignore
+                tracking_data[field] = value
+            for key, value in tracking_state.get("custom_tracking_data", {}).items():
+                if key == "cvar" and "cvar" in tracking_data:
+                    tracking_data["cvar"].update(value)
+                else:
+                    tracking_data[key] = value
+            if exc:
+                tracking_data["ca"] = 1
+                tracking_data["cra"] = repr(exc)
             tracking_data["cvar"] = json.dumps(tracking_data["cvar"])
 
             logger.debug(
@@ -268,26 +273,23 @@ class MatomoMiddleware:
                 extra={"tracking_data": tracking_data},
             )
             try:
-                if self.client is None:
-                    logger.error("self.client is not set, can't track request")
-                else:
-                    tracking_response = await self.client.post(self.matomo_url, data=tracking_data)
-                    logger.debug(
-                        "tracking response",
+                tracking_response = await self.client.post(self.matomo_url, data=tracking_data)
+                logger.debug(
+                    "tracking response",
+                    extra={
+                        "status": tracking_response.status_code,
+                        "content": tracking_response.text,
+                    },
+                )
+                if tracking_response.status_code >= 300:  # noqa: PLR2004
+                    logger.error(
+                        "Tracking call failed (status_code=%d)",
+                        tracking_response.status_code,
                         extra={
-                            "status": tracking_response.status_code,
-                            "content": tracking_response.text,
+                            "status_code": tracking_response.status_code,
+                            "text": tracking_response.text,
                         },
                     )
-                    if tracking_response.status_code >= 300:  # noqa: PLR2004
-                        logger.error(
-                            "Tracking call failed (status_code=%d)",
-                            tracking_response.status_code,
-                            extra={
-                                "status_code": tracking_response.status_code,
-                                "text": tracking_response.text,
-                            },
-                        )
             except httpx.HTTPError:
                 logger.exception("Error tracking view")
 
