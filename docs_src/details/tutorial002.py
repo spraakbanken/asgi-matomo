@@ -11,9 +11,7 @@ from asgi_matomo import MatomoMiddleware
 
 async def foo(request: Request) -> JSONResponse:  # noqa: RUF029
     """Store custom data during a request."""
-    if "state" not in request.scope:
-        request.scope["state"] = {}
-    request.scope["state"]["asgi_matomo"] = {
+    request.scope["state"]["asgi_matomo"]["custom_tracking_data"] = {
         "action_name": "Foo/foo",
         "e_c": "Foo",
         "e_a": "Playing",

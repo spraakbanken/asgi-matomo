@@ -63,7 +63,7 @@ docs = [
 requires-dist = [
     { name = "asgiref", specifier = ">=3.6.0" },
     { name = "httpx", specifier = ">=0.24" },
-    { name = "matomo-core", specifier = ">=0.1.0" },
+    { name = "matomo-core", specifier = ">=0.2.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -463,11 +463,11 @@ wheels = [
 
 [[package]]
 name = "matomo-core"
-version = "0.1.0"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/20/db/28e18f77d13fc48b5d8ca57a404ff0c3f2b64aa12712ca516e36af9e0f5f/matomo_core-0.1.0.tar.gz", hash = "sha256:99dc9d48b0a7c3ba4b15bd40e779ebedf61a8dc04c80a1e3f9626589307205bd", size = 7954 }
+sdist = { url = "https://files.pythonhosted.org/packages/45/70/9a3be52d1140f7c1209b2287df02400806c6322205dfbf152f31f0e830e1/matomo_core-0.2.0.tar.gz", hash = "sha256:86a1189350dc056c4d222d1178f5466f4c70c0fc39fd634553efeeedf87e9268", size = 28643 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b9/c5/709d6d16da66cfddf4d743f9c1e52c64632904ca7f1f052049ed02d285c6/matomo_core-0.1.0-py3-none-any.whl", hash = "sha256:0c22949fc909cf2feb6f353179cab7257ddcbbd7505b16275efb84dddaf5383c", size = 2631 },
+    { url = "https://files.pythonhosted.org/packages/a4/03/7671780ebdc19050420ebafa55662efb14fb70e931b92374cb0e2b7fa4c0/matomo_core-0.2.0-py3-none-any.whl", hash = "sha256:e170b191a7bb970dcb02c3a42f000b75bb9929882ba6d8914fe8cdba12db276f", size = 2672 },
 ]
 
 [[package]]

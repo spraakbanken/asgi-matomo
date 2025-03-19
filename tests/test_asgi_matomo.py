@@ -76,7 +76,7 @@ def create_app(
     def custom_var(request: Request) -> PlainTextResponse:
         if "state" not in request.scope:
             request.scope["state"] = {}
-        request.scope["state"]["asgi_matomo"] = {
+        request.scope["state"]["asgi_matomo"]["custom_tracking_data"] = {
             "e_a": "Playing",
             "cvar": {"anything": "goes"},
         }

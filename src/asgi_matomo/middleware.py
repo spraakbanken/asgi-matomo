@@ -215,7 +215,9 @@ class MatomoMiddleware:
             scope["state"] = {}  # type: ignore
 
         if "asgi_matomo" not in scope["state"]:  # type: ignore
-            scope["state"]["asgi_matomo"] = {}  # type: ignore
+            scope["state"]["asgi_matomo"] = {"tracking_data": {}}  # type: ignore
+        elif "tracking_data" not in scope["state"]["asgi_matomo"]:
+            scope["state"]["asgi_matomo"]["tracking_data"] = {}
         path = scope["path"]
 
         dont_track_this = False
@@ -253,13 +255,20 @@ class MatomoMiddleware:
                 }
             )
 
-            if "state" in scope and "asgi_matomo" in scope["state"]:  # type: ignore
-                for field, value in scope["state"]["asgi_matomo"].items():  # type: ignore
-                    if field in tracking_data and isinstance(tracking_data[field], dict) and isinstance(value, dict):
-                        tracking_data[field].update(value)  # type: ignore
-                    else:
-                        tracking_data[field] = value
-
+            tracking_state = scope.get("state", {}).get("asgi_matomo", {})  # type: ignore
+            for field, value in tracking_state.get("tracking_data", {}).items():  # type: ignore
+                if field in tracking_data and isinstance(tracking_data[field], dict) and isinstance(value, dict):
+                    tracking_data[field].update(value)  # type: ignore
+                else:
+                    tracking_data[field] = value
+            for key, value in tracking_state.get("custom_tracking_data", {}).items():
+                if key == "cvar" and "cvar" in tracking_data:
+                    tracking_data["cvar"].update(value)
+                else:
+                    tracking_data[key] = value
+            # if exc:
+            #     tracking_data["ca"] = 1
+            #     tracking_data["cra"] = str(exc)
             tracking_data["cvar"] = json.dumps(tracking_data["cvar"])
 
             logger.debug(
