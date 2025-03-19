@@ -216,8 +216,6 @@ class MatomoMiddleware:
 
         if "asgi_matomo" not in scope["state"]:  # type: ignore
             scope["state"]["asgi_matomo"] = {"tracking_data": {}}  # type: ignore
-        elif "tracking_data" not in scope["state"]["asgi_matomo"]:
-            scope["state"]["asgi_matomo"]["tracking_data"] = {}
         path = scope["path"]
 
         dont_track_this = False
@@ -258,10 +256,7 @@ class MatomoMiddleware:
 
             tracking_state = scope.get("state", {}).get("asgi_matomo", {})  # type: ignore
             for field, value in tracking_state.get("tracking_data", {}).items():  # type: ignore
-                if field in tracking_data and isinstance(tracking_data[field], dict) and isinstance(value, dict):
-                    tracking_data[field].update(value)  # type: ignore
-                else:
-                    tracking_data[field] = value
+                tracking_data[field] = value
             for key, value in tracking_state.get("custom_tracking_data", {}).items():
                 if key == "cvar" and "cvar" in tracking_data:
                     tracking_data["cvar"].update(value)
