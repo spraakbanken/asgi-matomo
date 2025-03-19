@@ -277,26 +277,23 @@ class MatomoMiddleware:
                 extra={"tracking_data": tracking_data},
             )
             try:
-                if self.client is None:
-                    logger.error("self.client is not set, can't track request")
-                else:
-                    tracking_response = await self.client.post(self.matomo_url, data=tracking_data)
-                    logger.debug(
-                        "tracking response",
+                tracking_response = await self.client.post(self.matomo_url, data=tracking_data)
+                logger.debug(
+                    "tracking response",
+                    extra={
+                        "status": tracking_response.status_code,
+                        "content": tracking_response.text,
+                    },
+                )
+                if tracking_response.status_code >= 300:  # noqa: PLR2004
+                    logger.error(
+                        "Tracking call failed (status_code=%d)",
+                        tracking_response.status_code,
                         extra={
-                            "status": tracking_response.status_code,
-                            "content": tracking_response.text,
+                            "status_code": tracking_response.status_code,
+                            "text": tracking_response.text,
                         },
                     )
-                    if tracking_response.status_code >= 300:  # noqa: PLR2004
-                        logger.error(
-                            "Tracking call failed (status_code=%d)",
-                            tracking_response.status_code,
-                            extra={
-                                "status_code": tracking_response.status_code,
-                                "text": tracking_response.text,
-                            },
-                        )
             except httpx.HTTPError:
                 logger.exception("Error tracking view")
 
