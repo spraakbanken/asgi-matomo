@@ -236,10 +236,11 @@ class MatomoMiddleware:
             return
 
         start_time_ns = time.perf_counter_ns()
-
+        exc: Exception | None = None
         try:
             await self.app(scope, receive, send_wrapper)
-        except Exception:
+        except Exception as error:
+            exc = error
             raise
         finally:
             end_time_ns = time.perf_counter_ns()
@@ -266,9 +267,9 @@ class MatomoMiddleware:
                     tracking_data["cvar"].update(value)
                 else:
                     tracking_data[key] = value
-            # if exc:
-            #     tracking_data["ca"] = 1
-            #     tracking_data["cra"] = str(exc)
+            if exc:
+                tracking_data["ca"] = 1
+                tracking_data["cra"] = repr(exc)
             tracking_data["cvar"] = json.dumps(tracking_data["cvar"])
 
             logger.debug(
