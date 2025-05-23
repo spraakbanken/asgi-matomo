@@ -77,13 +77,9 @@ class MatomoMiddleware:
             ignored_methods: list of methods to ignore, takes precedence over allowed methods. Default: None.
         """
         self.app = app
-        # self.matomo_url = matomo_url
-        # self.idsite = idsite
         self.assume_https = assume_https
-        # self.access_token = access_token
         self.lifespan_context = _DefaultLifespan(self)
         self.client = client or httpx.AsyncClient(timeout=http_timeout)
-        print(f"{route_details=}")
         self.matomo_core: MatomoCore = MatomoCore(
             matomo_url=matomo_url,
             id_site=idsite,
@@ -96,15 +92,6 @@ class MatomoMiddleware:
             allowed_methods=allowed_methods,
             ignored_methods=ignored_methods,
         )
-        # self.exclude_paths = set(exclude_paths or [])
-        # self.compiled_patterns = [re.compile(pattern) for pattern in (exclude_patterns or [])]
-        # self.route_details = route_details or {}
-        # self.allowed_methods: set[str] = set()
-        # if allowed_methods == "all-methods":
-        #     self.allowed_methods = matomo_core.constants.HTTP_METHODS
-        # elif allowed_methods:
-        #     self.allowed_methods.update(method.upper() for method in allowed_methods)
-        # self.ignored_methods: set[str] = {method.upper() for method in ignored_methods} if ignored_methods else set()
 
     @property
     def matomo_url(self) -> str:
@@ -216,10 +203,6 @@ class MatomoMiddleware:
                 instance["http_status_code"] = response["status"]
             return send(response)
 
-        if scope["type"] == "lifespan":
-            await self.lifespan(scope, receive, send)
-            return
-
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
@@ -228,11 +211,7 @@ class MatomoMiddleware:
         if "state" not in scope:
             scope["state"] = {}  # type: ignore
 
-        # if "asgi_matomo" not in scope["state"]:  # type: ignore
-        #     scope["state"]["asgi_matomo"] = {"tracking_data": {}}  # type: ignore
         request_data = self._build_tracking_state(scope)
-        print(f"{request_data=}")
-        print(f"{scope['path']=}")
         scope["state"]["asgi_matomo"] = self.matomo_core.build_tracking_state(
             user_agent=request_data["user_agent"],
             request_path=scope["path"],
@@ -244,13 +223,8 @@ class MatomoMiddleware:
             forwarded_for=request_data["forwarded_for"],
             lang=request_data["lang"],
         )
-        # path = scope["path"]
-
-        # dont_track_this = not scope["state"]["asgi_matomo"]["tracking"]
 
         # Early exit if we don't track this path
-        # if dont_track_this:
-        print(f"{scope['state']['asgi_matomo']=}")
         if not scope["state"]["asgi_matomo"]["tracking"]:
             await self.app(scope, receive, send)
             return
@@ -264,31 +238,6 @@ class MatomoMiddleware:
             raise
         finally:
             MatomoCore.track_request_end(instance["http_status_code"], scope["state"]["asgi_matomo"])
-            # end_time_ns = time.perf_counter_ns()
-
-            # tracking_data = self._build_tracking_state(scope)
-            # tracking_data.update(
-            #     {
-            #         "gt_ms": (end_time_ns - start_time_ns) / 1000,
-            #         "cvar": {
-            #             "http_status_code": instance["http_status_code"],
-            #             "http_method": scope["method"],
-            #         },
-            #     }
-            # )
-
-            # tracking_state = scope.get("state", {}).get("asgi_matomo", {})  # type: ignore
-            # for field, value in tracking_state.get("tracking_data", {}).items():  # type: ignore
-            #     tracking_data[field] = value
-            # for key, value in tracking_state.get("custom_tracking_data", {}).items():
-            #     if key == "cvar" and "cvar" in tracking_data:
-            #         tracking_data["cvar"].update(value)
-            #     else:
-            #         tracking_data[key] = value
-            # if exc:
-            #     tracking_data["ca"] = 1
-            #     tracking_data["cra"] = repr(exc)
-            # tracking_data["cvar"] = json.dumps(tracking_data["cvar"])
             tracking_data = MatomoCore.prepare_tracking_data_for_matomo(scope["state"]["asgi_matomo"], exc=exc)
             logger.debug(
                 "Making tracking call to '%s'",
@@ -378,7 +327,7 @@ class MatomoMiddleware:
         if not cip:
             cip = scope["client"][0] if scope["client"] else None
 
-        tracking_state = {
+        return {
             "url": url,
             "user_agent": user_agent,
             "lang": lang,
@@ -386,5 +335,3 @@ class MatomoMiddleware:
             "remote_addr": cip,
             "forwarded_for": server,
         }
-
-        return tracking_state

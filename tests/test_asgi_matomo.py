@@ -1,6 +1,6 @@
 import contextlib
 import time
-import typing
+import typing as t
 from collections.abc import AsyncGenerator, MutableMapping
 from dataclasses import dataclass
 from unittest import mock
@@ -17,6 +17,8 @@ from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.routing import Route
 from starlette.types import ASGIApp
 from syrupy import matchers
+from syrupy.assertion import SnapshotAssertion
+from syrupy.types import PropertyMatcher
 
 from asgi_matomo import MatomoMiddleware
 from asgi_matomo.trackers import PerfMsTracker
@@ -40,14 +42,14 @@ def fixture_matomo_client() -> mock.AsyncMock:
 
 
 @pytest.fixture(name="settings", scope="session")
-def fixture_settings() -> dict[str, typing.Any]:
+def fixture_settings() -> dict[str, t.Any]:
     return {"idsite": 1, "base_url": "https://testserver"}
 
 
 def create_app(
     matomo_client: AsyncClient | None,
-    settings: dict[str, typing.Any],
-    token: typing.Optional[str] = None,
+    settings: dict[str, t.Any],
+    token: t.Optional[str] = None,
 ) -> Starlette:
     app = Starlette()
 
@@ -109,12 +111,12 @@ def create_app(
 
 
 @pytest.fixture(name="app")
-def fixture_app(matomo_client: AsyncClient, settings: dict[str, typing.Any]) -> Starlette:
+def fixture_app(matomo_client: AsyncClient, settings: dict[str, t.Any]) -> Starlette:
     return create_app(matomo_client, settings)
 
 
 @pytest.fixture(name="app_w_token")
-def fixture_app_w_token(matomo_client: AsyncClient, settings: dict[str, typing.Any]) -> Starlette:
+def fixture_app_w_token(matomo_client: AsyncClient, settings: dict[str, t.Any]) -> Starlette:
     return create_app(matomo_client, settings, token="FAKE-TOKEN")
 
 
@@ -134,8 +136,8 @@ async def fixture_client_w_token(
             yield client
 
 
-def make_matcher(**kwargs):  # noqa: ANN003, ANN201
-    path_types = {"gt_ms": (float,), "rand": (int,)}
+def make_matcher(**kwargs: tuple[type[t.Any], ...]) -> PropertyMatcher:
+    path_types: dict[str, tuple[type[t.Any], ...]] = {"gt_ms": (float,), "rand": (int,)}
     if kwargs:
         path_types.update(kwargs)
     return matchers.path_type(path_types)
@@ -145,7 +147,7 @@ def make_matcher(**kwargs):  # noqa: ANN003, ANN201
 async def test_middleware_w_token_tracks_cip(
     client_w_token: AsyncClient,
     matomo_client: mock.AsyncMock,
-    snapshot_json,  # noqa: ANN001
+    snapshot_json: SnapshotAssertion,
 ) -> None:
     response = await client_w_token.get("/foo")
     assert response.status_code == 200
@@ -159,7 +161,7 @@ async def test_middleware_w_token_tracks_cip(
 async def test_middleware_w_token_respects_x_forwarded_for(
     client_w_token: AsyncClient,
     matomo_client: mock.AsyncMock,
-    snapshot_json,  # noqa: ANN001
+    snapshot_json: SnapshotAssertion,
 ) -> None:
     response = await client_w_token.get("/foo", headers={"x-forwarded-for": "127.0.0.2"})
     assert response.status_code == 200
@@ -170,7 +172,9 @@ async def test_middleware_w_token_respects_x_forwarded_for(
 
 
 @pytest.mark.asyncio
-async def test_middleware_tracks_urlref(client: AsyncClient, matomo_client: mock.AsyncMock, snapshot_json) -> None:  # noqa: ANN001
+async def test_middleware_tracks_urlref(
+    client: AsyncClient, matomo_client: mock.AsyncMock, snapshot_json: SnapshotAssertion
+) -> None:
     response = await client.get("/foo", headers={"referer": "https://example.com"})
     assert response.status_code == 200
 
@@ -183,7 +187,7 @@ async def test_middleware_tracks_urlref(client: AsyncClient, matomo_client: mock
 async def test_matomo_client_gets_called_on_get_foo(
     client: AsyncClient,
     matomo_client: mock.AsyncMock,
-    snapshot_json,  # noqa: ANN001
+    snapshot_json: SnapshotAssertion,
 ) -> None:
     response = await client.get("/foo")
     assert response.status_code == 200
@@ -217,7 +221,7 @@ async def test_matomo_client_is_not_called_when_method_is_not_allowed(
 async def test_matomo_client_gets_called_on_get_bar(
     client: AsyncClient,
     matomo_client: mock.AsyncMock,
-    snapshot_json,  # noqa: ANN001
+    snapshot_json: SnapshotAssertion,
 ) -> None:
     with contextlib.suppress(ValueError):
         _response = await client.get("/bar")
@@ -232,7 +236,7 @@ async def test_matomo_client_gets_called_on_get_bar(
 async def test_matomo_client_gets_called_on_get_bar2(
     client: AsyncClient,
     matomo_client: mock.AsyncMock,
-    snapshot_json,  # noqa: ANN001
+    snapshot_json: SnapshotAssertion,
 ) -> None:
     with contextlib.suppress(RuntimeError):
         _response = await client.get("/bar2")
@@ -247,7 +251,7 @@ async def test_matomo_client_gets_called_on_get_bar2(
 async def test_matomo_client_gets_called_on_get_custom_var(
     client: AsyncClient,
     matomo_client: mock.AsyncMock,
-    snapshot_json,  # noqa: ANN001
+    snapshot_json: SnapshotAssertion,
 ) -> None:
     response = await client.get("/set/custom/var")
     assert response.status_code == 200
@@ -283,7 +287,7 @@ async def test_matomo_client_doesnt_gets_called_on_get_old(
 async def test_matomo_client_gets_called_on_post_baz(
     client: AsyncClient,
     matomo_client: mock.AsyncMock,
-    snapshot_json,  # noqa: ANN001
+    snapshot_json: SnapshotAssertion,
 ) -> None:
     response = await client.post("/baz", json={"data": "content"})
     assert response.status_code == 200
@@ -294,7 +298,7 @@ async def test_matomo_client_gets_called_on_post_baz(
 
 
 @pytest.mark.asyncio
-async def test_real_async_client_is_created(settings: dict[str, typing.Any]) -> None:
+async def test_real_async_client_is_created(settings: dict[str, t.Any]) -> None:
     app = create_app(None, settings)
     async with LifespanManager(app):  # noqa: SIM117
         async with AsyncClient(transport=ASGITransport(app), base_url="http://testserver") as client:
@@ -303,7 +307,9 @@ async def test_real_async_client_is_created(settings: dict[str, typing.Any]) -> 
 
 
 @pytest.mark.asyncio
-async def test_foo2_has_custom_action_name(client: AsyncClient, matomo_client: mock.AsyncMock, snapshot_json) -> None:  # noqa: ANN001
+async def test_foo2_has_custom_action_name(
+    client: AsyncClient, matomo_client: mock.AsyncMock, snapshot_json: SnapshotAssertion
+) -> None:
     response = await client.get("/foo2")
     assert response.status_code == 200
 
@@ -346,7 +352,7 @@ async def test_middleware_handles_lifespan_startups_errors() -> None:
     async def receive() -> dict[str, str]:  # noqa: RUF029
         return {"type": "lifespan.startup"}
 
-    async def send(message: MutableMapping[str, typing.Any]) -> None:  # noqa: RUF029
+    async def send(message: MutableMapping[str, t.Any]) -> None:  # noqa: RUF029
         assert message["type"] in {
             "lifespan.startup.complete",
             "lifespan.startup.failed",
@@ -388,10 +394,10 @@ async def test_middleware_handles_lifespan_shutdown_errors() -> None:
         "state": {},
     }
 
-    async def receive() -> dict[str, typing.Any]:  # noqa: RUF029
+    async def receive() -> dict[str, t.Any]:  # noqa: RUF029
         return {"type": "lifespan.shutdown"}
 
-    async def send(message: MutableMapping[str, typing.Any]) -> None:  # noqa: RUF029
+    async def send(message: MutableMapping[str, t.Any]) -> None:  # noqa: RUF029
         assert message["type"] in {
             "lifespan.startup.complete",
             "lifespan.startup.failed",
