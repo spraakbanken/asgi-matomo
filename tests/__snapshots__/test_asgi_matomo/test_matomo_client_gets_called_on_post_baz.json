@@ -1,13 +1,13 @@
 {
   "action_name": "/baz",
-  "apiv": 1,
+  "apiv": "1",
   "cvar": "{\"http_status_code\": 200, \"http_method\": \"POST\"}",
   "gt_ms": "float",
-  "idsite": 1,
+  "idsite": "1",
   "pf_srv": "float",
   "rand": "int",
-  "rec": 1,
-  "send_image": 0,
+  "rec": "1",
+  "send_image": "0",
   "ua": "b'python-httpx/0.28.1'",
   "url": "https://testserver/baz"
 }

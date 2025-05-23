@@ -1,10 +1,6 @@
 """Matomo middleware for ASGI apps."""
 
-import json
 import logging
-import random
-import re
-import time
 import traceback
 import typing
 import urllib.parse
@@ -13,7 +9,6 @@ from contextlib import AsyncExitStack, asynccontextmanager
 from typing import Any, Literal
 
 import httpx
-import matomo_core.constants
 from asgiref.typing import (
     ASGI3Application,
     ASGIReceiveCallable,
@@ -22,6 +17,7 @@ from asgiref.typing import (
     ASGISendEvent,
     HTTPScope,
 )
+from matomo_core import MatomoCore
 
 logger = logging.getLogger(__name__)
 
@@ -81,21 +77,26 @@ class MatomoMiddleware:
             ignored_methods: list of methods to ignore, takes precedence over allowed methods. Default: None.
         """
         self.app = app
-        self.matomo_url = matomo_url
-        self.idsite = idsite
         self.assume_https = assume_https
-        self.access_token = access_token
         self.lifespan_context = _DefaultLifespan(self)
         self.client = client or httpx.AsyncClient(timeout=http_timeout)
-        self.exclude_paths = set(exclude_paths or [])
-        self.compiled_patterns = [re.compile(pattern) for pattern in (exclude_patterns or [])]
-        self.route_details = route_details or {}
-        self.allowed_methods: set[str] = set()
-        if allowed_methods == "all-methods":
-            self.allowed_methods = matomo_core.constants.HTTP_METHODS
-        elif allowed_methods:
-            self.allowed_methods.update(method.upper() for method in allowed_methods)
-        self.ignored_methods: set[str] = {method.upper() for method in ignored_methods} if ignored_methods else set()
+        self.matomo_core: MatomoCore = MatomoCore(
+            matomo_url=matomo_url,
+            id_site=idsite,
+            token_auth=access_token,
+            # base_url: t.Optional[str] = None,
+            ignored_routes=exclude_paths,
+            routes_details=route_details,
+            ignored_patterns=exclude_patterns,
+            # ignored_ua_patterns: t.Optional[list[str]] = None,
+            allowed_methods=allowed_methods,
+            ignored_methods=ignored_methods,
+        )
+
+    @property
+    def matomo_url(self) -> str:
+        """The url for reporting to matomo."""
+        return self.matomo_core.matomo_url
 
     async def startup(self) -> None:
         """Prepare this middleware for use."""
@@ -202,10 +203,6 @@ class MatomoMiddleware:
                 instance["http_status_code"] = response["status"]
             return send(response)
 
-        if scope["type"] == "lifespan":
-            await self.lifespan(scope, receive, send)
-            return
-
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
@@ -214,26 +211,25 @@ class MatomoMiddleware:
         if "state" not in scope:
             scope["state"] = {}  # type: ignore
 
-        if "asgi_matomo" not in scope["state"]:  # type: ignore
-            scope["state"]["asgi_matomo"] = {"tracking_data": {}}  # type: ignore
-        path = scope["path"]
-
-        dont_track_this = False
-        if (
-            path in self.exclude_paths
-            or scope["method"] in self.ignored_methods
-            or scope["method"] not in self.allowed_methods
-            or any(pattern.match(path) for pattern in self.compiled_patterns)
-        ):
-            logger.debug("excluding path='%s'", path, extra={"path": path})
-            dont_track_this = True
+        request_data = self._build_tracking_state(scope)
+        scope["state"]["asgi_matomo"] = self.matomo_core.build_tracking_state(
+            user_agent=request_data["user_agent"],
+            request_path=scope["path"],
+            request_url=request_data["url"],
+            method=scope["method"],
+            remote_addr=request_data["remote_addr"],
+            request_url_rule=scope["path"],
+            referrer=request_data["referrer"],
+            forwarded_for=request_data["forwarded_for"],
+            lang=request_data["lang"],
+        )
 
         # Early exit if we don't track this path
-        if dont_track_this:
+        if not scope["state"]["asgi_matomo"]["tracking"]:
             await self.app(scope, receive, send)
             return
 
-        start_time_ns = time.perf_counter_ns()
+        # start_time_ns = time.perf_counter_ns()
         exc: Exception | None = None
         try:
             await self.app(scope, receive, send_wrapper)
@@ -241,32 +237,8 @@ class MatomoMiddleware:
             exc = error
             raise
         finally:
-            end_time_ns = time.perf_counter_ns()
-
-            tracking_data = self._build_tracking_state(scope)
-            tracking_data.update(
-                {
-                    "gt_ms": (end_time_ns - start_time_ns) / 1000,
-                    "cvar": {
-                        "http_status_code": instance["http_status_code"],
-                        "http_method": scope["method"],
-                    },
-                }
-            )
-
-            tracking_state = scope.get("state", {}).get("asgi_matomo", {})  # type: ignore
-            for field, value in tracking_state.get("tracking_data", {}).items():  # type: ignore
-                tracking_data[field] = value
-            for key, value in tracking_state.get("custom_tracking_data", {}).items():
-                if key == "cvar" and "cvar" in tracking_data:
-                    tracking_data["cvar"].update(value)
-                else:
-                    tracking_data[key] = value
-            if exc:
-                tracking_data["ca"] = 1
-                tracking_data["cra"] = repr(exc)
-            tracking_data["cvar"] = json.dumps(tracking_data["cvar"])
-
+            MatomoCore.track_request_end(instance["http_status_code"], scope["state"]["asgi_matomo"])
+            tracking_data = MatomoCore.prepare_tracking_data_for_matomo(scope["state"]["asgi_matomo"], exc=exc)
             logger.debug(
                 "Making tracking call to '%s'",
                 self.matomo_url,
@@ -296,14 +268,15 @@ class MatomoMiddleware:
     def _build_tracking_state(self, scope: HTTPScope) -> dict[str, Any]:
         server = None
         user_agent = None
-        accept_lang = None
+        lang = None
         cip = None
         path = scope["path"]
         urlref = None
 
         for header, value in scope["headers"]:
             if header == b"accept_lang":
-                accept_lang = value
+                if not lang:
+                    lang = value
             elif header == b"user-agent":
                 user_agent = value
             elif header == b"x-forwarded-server":
@@ -338,7 +311,7 @@ class MatomoMiddleware:
                 "server": server,
                 "path": path,
                 "user_agent": user_agent,
-                "accept_lang": accept_lang,
+                "accept_lang": lang,
             },
         )
         url = urllib.parse.urlunsplit(
@@ -354,24 +327,11 @@ class MatomoMiddleware:
         if not cip:
             cip = scope["client"][0] if scope["client"] else None
 
-        tracking_state = {
-            "idsite": self.idsite,
-            "action_name": scope["path"],
+        return {
             "url": url,
-            "rec": 1,
-            "rand": random.getrandbits(32),
-            "apiv": 1,
-            "ua": user_agent,
-            "send_image": 0,
+            "user_agent": user_agent,
+            "lang": lang,
+            "referrer": urlref,
+            "remote_addr": cip,
+            "forwarded_for": server,
         }
-
-        if scope["path"] in self.route_details:
-            tracking_state |= self.route_details[scope["path"]]
-        if self.access_token and cip:
-            tracking_state["token_auth"] = self.access_token
-            tracking_state["cip"] = cip
-        if accept_lang:
-            tracking_state["lang"] = accept_lang
-        if urlref:
-            tracking_state["urlref"] = urlref
-        return tracking_state
