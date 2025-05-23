@@ -9,7 +9,7 @@ authors = [
 license = "MIT"
 readme = "README.md"
 requires-python = ">= 3.10"
-dependencies = ["asgiref>=3.6.0", "httpx>=0.24", "matomo-core>=0.3.0"]
+dependencies = ["asgiref>=3.6.0", "httpx>=0.24", "matomo-core>=0.3.1"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Web Environment",
