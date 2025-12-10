@@ -74,8 +74,8 @@ class MatomoMiddleware:
             exclude_patterns: exclude paths based on these regex patterns
             route_details: mapping of details for each path
             allowed_methods: list of methods to track or "all-methods". Default: "all-methods".
-            ignored_methods: list of methods to ignore, takes precedence over allowed methods. Default: None.
-        """
+            ignored_methods: list of methods to ignore, wins over allowed methods. Default: None.
+        """  # noqa: E501
         self.app = app
         self.assume_https = assume_https
         self.lifespan_context = _DefaultLifespan(self)
@@ -105,7 +105,9 @@ class MatomoMiddleware:
         """Shut down http client properly."""
         await self.client.aclose()
 
-    async def lifespan(self, scope: HTTPScope, receive: ASGIReceiveCallable, send: ASGISendCallable) -> None:
+    async def lifespan(
+        self, scope: HTTPScope, receive: ASGIReceiveCallable, send: ASGISendCallable
+    ) -> None:
         """Handle ASGI lifespan messages.
 
         This allows us to manage application startup and shutdown events.
@@ -167,7 +169,10 @@ class MatomoMiddleware:
                 #    in this case we'll run our teardown and then return
                 await self.app(scope, wrapped_rcv, wrapped_send)
             except BaseException:
-                if "lifespan.startup.failed" in send_events or "lifespan.shutdown.failed" in send_events:
+                if (
+                    "lifespan.startup.failed" in send_events
+                    or "lifespan.shutdown.failed" in send_events
+                ):
                     # the app tried to start and failed
                     # this app re-raises the exceptions (Starlette does this)
                     # re-raise so that our teardown is triggered
@@ -191,7 +196,9 @@ class MatomoMiddleware:
         # even if the app sent this, we intercepted it and discarded it until we were done
         # await send({"type": "lifespan.shutdown.complete"})
 
-    async def __call__(self, scope: HTTPScope, receive: ASGIReceiveCallable, send: ASGISendCallable) -> Any:
+    async def __call__(
+        self, scope: HTTPScope, receive: ASGIReceiveCallable, send: ASGISendCallable
+    ) -> Any:
         """Handle request."""
         # locals inside the app function (send_wrapper) can't be assigned to,
         # as the interpreter detects the assignment and thus creates a new
@@ -237,8 +244,12 @@ class MatomoMiddleware:
             exc = error
             raise
         finally:
-            MatomoCore.track_request_end(instance["http_status_code"], scope["state"]["asgi_matomo"])
-            tracking_data = MatomoCore.prepare_tracking_data_for_matomo(scope["state"]["asgi_matomo"], exc=exc)
+            MatomoCore.track_request_end(
+                instance["http_status_code"], scope["state"]["asgi_matomo"]
+            )
+            tracking_data = MatomoCore.prepare_tracking_data_for_matomo(
+                scope["state"]["asgi_matomo"], exc=exc
+            )
             logger.debug(
                 "Making tracking call to '%s'",
                 self.matomo_url,
