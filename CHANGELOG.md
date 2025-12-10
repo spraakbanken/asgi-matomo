@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased]
+
+### Added
+
+- Allow to allow and ignore calls based on http method by [@kod-kristoff](https://github.com/kod-kristoff)
+- Add kwarg for setting http_timeout by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Changed
+
+- Use matomo-core instead by [@kod-kristoff](https://github.com/kod-kristoff)
+- Use PerfMsTracker from matomo-core by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Documentation
+
+- Update README.md by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Fixed
+
+- Record error and error message by [@kod-kristoff](https://github.com/kod-kristoff)
+
 ## [0.6.0] - 2024-03-13
 
 ### Changed
