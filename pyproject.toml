@@ -1,6 +1,6 @@
 [project]
 name = "asgi-matomo"
-version = "0.6.0"
+version = "0.6.1"
 description = "Middleware for tracking ASGI requests with Matomo"
 authors = [
     { name = "Språkbanken Text", email = "sb-info@svenska.gu.se" },
