@@ -1,10 +1,9 @@
 # asgi-matomo
 
-
 [![PyPI version](https://img.shields.io/pypi/v/asgi-matomo.svg?style=flat-square&colorB=dfb317)](https://pypi.org/project/asgi-matomo/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/asgi-matomo)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/asgi-matomo)](https://pypi.org/project/asgi-matomo/)
- [![Docs](https://img.shields.io/badge/docs-here-red.svg?style=flat-square)](https://spraakbanken.github.io/asgi-matomo/)
+[![Docs](https://img.shields.io/badge/docs-here-red.svg?style=flat-square)](https://spraakbanken.github.io/asgi-matomo/)
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)
 
 [![Maturity badge - level 3](https://img.shields.io/badge/Maturity-Level%203%20--%20Stable-green.svg)](https://github.com/spraakbanken/getting-started/blob/main/scorecard.md)
@@ -14,9 +13,8 @@
 
 [![CI(check)](https://github.com/spraakbanken/asgi-matomo/actions/workflows/check.yml/badge.svg)](https://github.com/spraakbanken/asgi-matomo/actions/workflows/check.yml)
 [![CI(release)](https://github.com/spraakbanken/asgi-matomo/actions/workflows/release.yml/badge.svg)](https://github.com/spraakbanken/asgi-matomo/actions/workflows/release.yml)
-[![CI(scheduled)](https://github.com/spraakbanken/asgi-matomo/actions/workflows/scheduled.yml/badge.svg)](https://github.com/spraakbanken/asgi-matomo/actions/workflows/scheduled.yml)
+[![CI(rolling)](https://github.com/spraakbanken/asgi-matomo/actions/workflows/rolling.yml/badge.svg)](https://github.com/spraakbanken/asgi-matomo/actions/workflows/rolling.yml)
 [![CI(test)](https://github.com/spraakbanken/asgi-matomo/actions/workflows/test.yml/badge.svg)](https://github.com/spraakbanken/asgi-matomo/actions/workflows/test.yml)
-
 
 Tracking requests with Matomo from ASGI apps.
 
@@ -43,7 +41,7 @@ Currently this middleware tracks:
 - `cip` client ip, **requires** `access_token` to be given.
 - `action_name` that defaults to path, but can be specified.
 
-You can also pass variable to track by adding an `asgi_matomo`  dict in the `state` dict of the ASGI `scope`:
+You can also pass variable to track by adding an `asgi_matomo` dict in the `state` dict of the ASGI `scope`:
 
 ```python
 scope = {
@@ -168,10 +166,10 @@ app.add_middleware(
 - _(Optional)_ `assume_https`: If `True`, set tracked url scheme to `https`, useful when running behind a proxy. Defaults to `True`.
 - _(Optional)_ `exclude_paths`: A list of paths to exclude, only excludes path that is equal to a path in this list. These are tried before `exclude_patterns`. Defaults to `None`.
 - _(Optional)_ `exclude_patterns`: A list of regex patterns that are compiled, and then exclude a path from tracking if any pattern match. Defaults to `None`.
-These are tried after `exclude_paths`.
+  These are tried after `exclude_paths`.
 - _(Optional)_ `route_details`: A dict with custom route-specific tracking data. Defaults to `None`.
 - _(Optional)_ `client`: A custom http client to use (must use the same API as `httpx.Client`). Defaults to `None`, a client is created.
-- _(Optional)_ `http_timeout`: Timeout to use for the client being created. Ignored if a custom client is provided. Defaults to `5`. 
+- _(Optional)_ `http_timeout`: Timeout to use for the client being created. Ignored if a custom client is provided. Defaults to `5`.
 - _(Optional)_ `allowed_methods`: List of HTTP methods that should be tracked. Defaults to `"all-methods"`.
 - _(Optional)_ `ignored_methods`: List of HTTP methods to ignored. Ignored methods takes precedence over allowed methods. Defaults to `None`.
 
