@@ -49,7 +49,7 @@ def fixture_settings() -> dict[str, t.Any]:
 def create_app(
     matomo_client: AsyncClient | None,
     settings: dict[str, t.Any],
-    token: t.Optional[str] = None,
+    token: str | None = None,
 ) -> Starlette:
     app = Starlette()
 
@@ -123,7 +123,9 @@ def fixture_app_w_token(matomo_client: AsyncClient, settings: dict[str, t.Any]) 
 @pytest_asyncio.fixture(name="client")
 async def fixture_client(app: Starlette) -> AsyncGenerator[AsyncClient, None]:
     async with LifespanManager(app):  # noqa: SIM117
-        async with AsyncClient(transport=ASGITransport(app), base_url="http://testserver") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app), base_url="http://testserver"
+        ) as client:
             yield client
 
 
@@ -132,7 +134,9 @@ async def fixture_client_w_token(
     app_w_token: Starlette,
 ) -> AsyncGenerator[AsyncClient, None]:
     async with LifespanManager(app_w_token):  # noqa: SIM117
-        async with AsyncClient(transport=ASGITransport(app_w_token), base_url="http://testserver") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app_w_token), base_url="http://testserver"
+        ) as client:
             yield client
 
 
@@ -258,7 +262,9 @@ async def test_matomo_client_gets_called_on_get_custom_var(
 
     matomo_client.post.assert_awaited()
 
-    assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher(pf_srv=(float,)))
+    assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(
+        matcher=make_matcher(pf_srv=(float,))
+    )
 
 
 @pytest.mark.asyncio
@@ -294,14 +300,18 @@ async def test_matomo_client_gets_called_on_post_baz(
 
     matomo_client.post.assert_awaited()
 
-    assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher(pf_srv=(float,)))
+    assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(
+        matcher=make_matcher(pf_srv=(float,))
+    )
 
 
 @pytest.mark.asyncio
 async def test_real_async_client_is_created(settings: dict[str, t.Any]) -> None:
     app = create_app(None, settings)
     async with LifespanManager(app):  # noqa: SIM117
-        async with AsyncClient(transport=ASGITransport(app), base_url="http://testserver") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app), base_url="http://testserver"
+        ) as client:
             response = await client.get("/health")
             assert response.status_code == 200
 
