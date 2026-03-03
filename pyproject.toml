@@ -2,67 +2,60 @@
 name = "asgi-matomo"
 version = "0.6.1"
 description = "Middleware for tracking ASGI requests with Matomo"
-authors = [
-    { name = "Språkbanken Text", email = "sb-info@svenska.gu.se" },
-    { name = "Kristoffer Andersson", email = "kristoffer.andersson@gu.se" },
-]
-license = "MIT"
 readme = "README.md"
 requires-python = ">= 3.10"
-dependencies = ["asgiref>=3.6.0", "httpx>=0.24", "matomo-core>=0.3.1"]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Environment :: Web Environment",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Framework :: FastAPI",
-    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
-    "Topic :: Software Development :: Libraries :: Python Modules",
+license = "MIT"
+authors = [
+  { name = "Språkbanken Text", email = "sb-info@svenska.gu.se" },
 ]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Web Environment",
+  "Framework :: FastAPI",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = ["asgiref>=3.6.0", "httpx>=0.24", "matomo-core>=0.3.1"]
 
 [project.urls]
+"Bug Tracker" = "https://github.com/spraakbanken/asgi-matomo/issues"
 homepage = "https://spraakbanken.gu.se"
 repository = "https://github.com/spraakbanken/asgi-matomo"
-"Bug Tracker" = "https://github.com/spraakbanken/asgi-matomo/issues"
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.metadata]
-allow-direct-references = true
-
 
 [dependency-groups]
 dev = [
-    "asgi-lifespan>=2.1.0",
-    "mypy>=1.15.0",
-    "pytest>=8.3.5",
-    "pytest-asyncio>=0.25.3",
-    "pytest-cov>=6.0.0",
-    "ruff>=0.9.10",
-    "starlette>=0.46.1",
-    "syrupy>=4.9.0",
+  "asgi-lifespan>=2.1.0",
+  "mypy>=1.15.0",
+  "pytest>=8.3.5",
+  "pytest-asyncio>=0.25.3",
+  "pytest-cov>=6.0.0",
+  "ruff>=0.9.10",
+  "starlette>=0.46.1",
+  "syrupy>=4.9.0",
 ]
 docs = [
-    "mike>=2.0.0",
-    "mkdocs>=1.5.3",
-    "mkdocs-material>=9.4.8",
-    "mdx-include>=1.4.2",
-    "markdown>=3.5.1",
-    "mkdocs-markdownextradata-plugin>=0.2.5",
+  "markdown>=3.5.1",
+  "mdx-include>=1.4.2",
+  "mike>=2.0.0",
+  "mkdocs>=1.5.3",
+  "mkdocs-markdownextradata-plugin>=0.2.5",
+  "mkdocs-material>=9.4.8",
 ]
 
-[tool.hatch.build.targets.sdist]
-exclude = ["/.github", "/docs"]
+[build-system]
+requires = ["uv_build>=0.10,<0.11"]
+build-backend = "uv_build"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/asgi_matomo"]
+[tool.uv.build-backend]
+module-name = "asgi_matomo"
+source-exclude = ["/.github", "/docs"]
