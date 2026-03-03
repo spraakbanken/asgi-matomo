@@ -33,17 +33,10 @@ idna==3.11
     #   httpx
 iniconfig==2.3.0
     # via pytest
-librt==0.7.3
-    # via mypy
 matomo-core==0.3.1
     # via asgi-matomo
-mypy==1.19.0
-mypy-extensions==1.1.0
-    # via mypy
 packaging==25.0
     # via pytest
-pathspec==0.12.1
-    # via mypy
 pluggy==1.6.0
     # via
     #   pytest
@@ -65,13 +58,12 @@ syrupy==5.0.0
 tomli==2.3.0 ; python_full_version <= '3.11'
     # via
     #   coverage
-    #   mypy
     #   pytest
-typing-extensions==4.15.0
+ty==0.0.20
+typing-extensions==4.15.0 ; python_full_version < '3.13'
     # via
     #   anyio
     #   asgiref
     #   exceptiongroup
-    #   mypy
     #   pytest-asyncio
     #   starlette
