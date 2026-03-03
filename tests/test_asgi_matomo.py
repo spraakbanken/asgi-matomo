@@ -54,7 +54,7 @@ def create_app(
     app = Starlette()
 
     app.add_middleware(
-        MatomoMiddleware,
+        MatomoMiddleware,  # ty:ignore[invalid-argument-type]
         client=matomo_client,
         matomo_url="http://trackingserver",
         idsite=settings["idsite"],
@@ -343,7 +343,7 @@ async def test_middleware_handles_lifespan_startups_errors() -> None:
         routes=[Route("/", homepage)],
         middleware=[
             Middleware(
-                MatomoMiddleware,
+                MatomoMiddleware,  # ty:ignore[invalid-argument-type]
                 matomo_url="YOUR MATOMO TRACKING URL",
                 idsite=12345,  # your service tracking id
             )
@@ -388,7 +388,7 @@ async def test_middleware_handles_lifespan_shutdown_errors() -> None:
         routes=[Route("/", homepage)],
         middleware=[
             Middleware(
-                MatomoMiddleware,
+                MatomoMiddleware,  # ty:ignore[invalid-argument-type]
                 matomo_url="YOUR MATOMO TRACKING URL",
                 idsite=12345,  # your service tracking id
             )

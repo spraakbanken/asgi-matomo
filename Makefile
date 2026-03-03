@@ -92,7 +92,7 @@ install-pre-commit: .git/hooks/pre-commit
 
 # setup production environment
 install:
-	uv sync --all-packages --no-dev
+	uv sync --all-packages --no-dev --frozen
 
 lock: uv.lock
 
@@ -115,7 +115,7 @@ doc-tests:
 .PHONY: type-check
 # check types
 type-check:
-	${INVENV} mypy ${PROJECT_SRC} ${tests} --exclude tests/test_testing --exclude tests/test_usage --exclude tests/test_details
+	${INVENV} ty check ${PROJECT_SRC} ${tests}
 
 .PHONY: lint
 # lint the code

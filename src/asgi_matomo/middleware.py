@@ -16,6 +16,7 @@ from asgiref.typing import (
     ASGISendCallable,
     ASGISendEvent,
     HTTPScope,
+    Scope,
 )
 from matomo_core import MatomoCore
 
@@ -45,7 +46,7 @@ class MatomoMiddleware:
     def __init__(
         self,
         app: ASGI3Application,
-        *,
+        # *,
         matomo_url: str,
         idsite: int,
         access_token: str | None = None,
@@ -106,7 +107,7 @@ class MatomoMiddleware:
         await self.client.aclose()
 
     async def lifespan(
-        self, scope: HTTPScope, receive: ASGIReceiveCallable, send: ASGISendCallable
+        self, scope: Scope, receive: ASGIReceiveCallable, send: ASGISendCallable
     ) -> None:
         """Handle ASGI lifespan messages.
 
@@ -197,8 +198,8 @@ class MatomoMiddleware:
         # await send({"type": "lifespan.shutdown.complete"})
 
     async def __call__(
-        self, scope: HTTPScope, receive: ASGIReceiveCallable, send: ASGISendCallable
-    ) -> Any:
+        self, scope: Scope, receive: ASGIReceiveCallable, send: ASGISendCallable
+    ) -> None:
         """Handle request."""
         # locals inside the app function (send_wrapper) can't be assigned to,
         # as the interpreter detects the assignment and thus creates a new
@@ -216,7 +217,7 @@ class MatomoMiddleware:
 
         # ensure 'asgi_matomo' is set in state
         if "state" not in scope:
-            scope["state"] = {}  # type: ignore
+            scope["state"] = {}
 
         request_data = self._build_tracking_state(scope)
         scope["state"]["asgi_matomo"] = self.matomo_core.build_tracking_state(
