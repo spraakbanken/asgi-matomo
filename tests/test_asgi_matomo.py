@@ -50,21 +50,23 @@ def create_app(
     matomo_client: AsyncClient | None,
     settings: dict[str, t.Any],
     token: str | None = None,
+    use_middleware: bool = True,
 ) -> Starlette:
     app = Starlette()
 
-    app.add_middleware(
-        MatomoMiddleware,  # ty:ignore[invalid-argument-type]
-        client=matomo_client,
-        matomo_url="http://trackingserver",
-        idsite=settings["idsite"],
-        access_token=token,
-        exclude_paths=["/health"],
-        exclude_patterns=[".*/old.*"],
-        route_details={"/foo2": {"action_name": "The real foo", "e_a": "fooing"}},
-        allowed_methods=["GET", "PoST", "HEAD", "OPTIONS"],
-        ignored_methods=["OptiOns"],
-    )
+    if use_middleware:
+        app.add_middleware(
+            MatomoMiddleware,  # ty:ignore[invalid-argument-type]
+            client=matomo_client,
+            matomo_url="http://trackingserver",
+            idsite=settings["idsite"],
+            access_token=token,
+            exclude_paths=["/health"],
+            exclude_patterns=[".*/old.*"],
+            route_details={"/foo2": {"action_name": "The real foo", "e_a": "fooing"}},
+            allowed_methods=["GET", "PoST", "HEAD", "OPTIONS"],
+            ignored_methods=["OptiOns"],
+        )
 
     def foo(_request: Request) -> PlainTextResponse:
         return PlainTextResponse("foo")
@@ -78,6 +80,8 @@ def create_app(
     def custom_var(request: Request) -> PlainTextResponse:
         if "state" not in request.scope:
             request.scope["state"] = {}
+        if "asgi_matomo" not in request.scope["state"]:
+            request.scope["state"]["asgi_matomo"] = {}
         request.scope["state"]["asgi_matomo"]["custom_tracking_data"] = {
             "e_a": "Playing",
             "cvar": {"anything": "goes"},
@@ -120,6 +124,13 @@ def fixture_app_w_token(matomo_client: AsyncClient, settings: dict[str, t.Any]) 
     return create_app(matomo_client, settings, token="FAKE-TOKEN")
 
 
+@pytest.fixture(name="app_wo_middleware")
+def fixture_app_wo_middleware(
+    matomo_client: AsyncClient, settings: dict[str, t.Any]
+) -> Starlette:
+    return create_app(matomo_client, settings, use_middleware=False)
+
+
 @pytest_asyncio.fixture(name="client")
 async def fixture_client(app: Starlette) -> AsyncGenerator[AsyncClient, None]:
     async with LifespanManager(app):  # noqa: SIM117
@@ -136,6 +147,17 @@ async def fixture_client_w_token(
     async with LifespanManager(app_w_token):  # noqa: SIM117
         async with AsyncClient(
             transport=ASGITransport(app_w_token), base_url="http://testserver"
+        ) as client:
+            yield client
+
+
+@pytest_asyncio.fixture(name="client_wo_middleware")
+async def fixture_client_wo_middleware(
+    app_wo_middleware: Starlette,
+) -> AsyncGenerator[AsyncClient, None]:
+    async with LifespanManager(app_wo_middleware):  # noqa: SIM117
+        async with AsyncClient(
+            transport=ASGITransport(app_wo_middleware), base_url="http://testserver"
         ) as client:
             yield client
 
@@ -417,3 +439,21 @@ async def test_middleware_handles_lifespan_shutdown_errors() -> None:
 
     with pytest.raises(RuntimeError, match="shutdown failure"):
         await app(lifespan_scope, receive, send)
+
+
+@pytest.mark.asyncio
+async def test_perf_ms_tracker_works_without_matomo_middleware(
+    client_wo_middleware: AsyncClient,
+) -> None:
+    # Call all endpoints without Middleware to see that they work
+    await client_wo_middleware.get("/foo")
+    await client_wo_middleware.get("/foo2")
+    await client_wo_middleware.get("/bar")
+    with contextlib.suppress(RuntimeError):
+        await client_wo_middleware.get("/bar2")
+    await client_wo_middleware.get("/health")
+    await client_wo_middleware.get("/some/old/path")
+    await client_wo_middleware.get("/old/path")
+    await client_wo_middleware.get("/really/old")
+    await client_wo_middleware.get("/set/custom/var")
+    await client_wo_middleware.post("/baz", json={"data": "content"})

@@ -14,8 +14,8 @@ def PerfMsTracker(  # noqa: N802
         scope: mapping of tracked data
         key: the key to use to store this measurement.
     """
-    # if "state" not in scope:
-    #     scope["state"] = {}
-    # if "asgi_matomo" not in scope["state"]:
-    #     scope["state"]["asgi_matomo"] = {}
+    if "state" not in scope:
+        scope["state"] = {}
+    if "asgi_matomo" not in scope["state"]:
+        scope["state"]["asgi_matomo"] = {}
     return matomo_core.trackers.PerfMsTracker(scope=scope["state"]["asgi_matomo"], key=key)
