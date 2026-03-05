@@ -45,4 +45,5 @@ updates:
 
   - package-ecosystem: "pre-commit"
     directory: "/"
-    schedule: "daily"
+    schedule:
+      interval: "daily"
