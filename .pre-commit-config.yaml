@@ -17,7 +17,7 @@ repos:
       - id: uv-export
         args: ["--dev", "--format=requirements-txt", "--no-hashes", "--no-emit-project", "--output-file=tests/requirements-testing.lock"]
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-yaml
         args: [--allow-multiple-documents]
