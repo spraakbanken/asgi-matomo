@@ -25,13 +25,13 @@ jobs:
     runs-on: ubuntu-latest
     name: ubuntu / 3.10 / fmt
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5.0.0
         with:
           persist-credentials: false
           submodules: true
 
       - name: Set up the python ${{ env.MINIMUM_PYTHON_VERSION }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         id: setup-python
         with:
           python-version: ${{ env.MINIMUM_PYTHON_VERSION }}
@@ -40,7 +40,7 @@ jobs:
       #  -----  setup uv and load cache   -----
       #----------------------------------------------
       - name: Set up uv
-        uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # 7.3.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # 10.0.1
         with:
           version: ${{ env.UV_VERSION }}
           enable-cache: true
@@ -55,12 +55,12 @@ jobs:
     runs-on: ubuntu-latest
     name: ubuntu / 3.10 / lint
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5.0.0
         with:
           persist-credentials: false
           submodules: true
       - name: Set up the python ${{ env.MINIMUM_PYTHON_VERSION }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         id: setup-python
         with:
           python-version: ${{ env.MINIMUM_PYTHON_VERSION }}
@@ -69,7 +69,7 @@ jobs:
       #  -----  setup uv and load cache   -----
       #----------------------------------------------
       - name: Set up uv
-        uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # 7.3.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # 10.0.1
         with:
           version: ${{ env.UV_VERSION }}
           enable-cache: true
@@ -84,12 +84,12 @@ jobs:
     runs-on: ubuntu-latest
     name: ubuntu / 3.10 / type-check
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5.0.0
         with:
           persist-credentials: false
           submodules: true
       - name: Set up the python ${{ env.MINIMUM_PYTHON_VERSION }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         id: setup-python
         with:
           python-version: ${{ env.MINIMUM_PYTHON_VERSION }}
@@ -98,7 +98,7 @@ jobs:
       #  -----  setup uv and load cache   -----
       #----------------------------------------------
       - name: Set up uv
-        uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # 7.3.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # 10.0.1
         with:
           version: ${{ env.UV_VERSION }}
           enable-cache: true
@@ -109,6 +109,22 @@ jobs:
       - name: type-check code
         run: make type-check
 
+  pre-commit:
+    name: ubuntu / 3.10 / pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5.0.0
+        with:
+          persist-credentials: false
+          submodules: true
+      - name: Set up the python ${{ env.MINIMUM_PYTHON_VERSION }}
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        id: setup-python
+        with:
+          python-version: ${{ env.MINIMUM_PYTHON_VERSION }}
+      - name: prek run
+        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
+
   # https://github.com/marketplace/actions/alls-green#why used for branch protection checks
   check-check:
     if: always()
@@ -116,10 +132,11 @@ jobs:
       - fmt
       - lint
       - type-check
+      - pre-commit
     runs-on: ubuntu-latest
     permissions: {}
     steps:
       - name: Decide whether the needed jobs succeeded or failed
-        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
+        uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
         with:
           jobs: ${{ toJSON(needs) }}
