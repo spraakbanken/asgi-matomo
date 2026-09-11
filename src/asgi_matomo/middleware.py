@@ -36,7 +36,7 @@ class _DefaultLifespan:
     async def __aexit__(self, *exc_info: object) -> None:
         await self._app.shutdown()
 
-    def __call__(self: _T, app: object) -> _T:  # noqa: ARG002
+    def __call__(self: _T, app: object) -> _T:  # ruff: ignore[unused-method-argument]
         return self
 
 
@@ -76,7 +76,7 @@ class MatomoMiddleware:
             route_details: mapping of details for each path
             allowed_methods: list of methods to track or "all-methods". Default: "all-methods".
             ignored_methods: list of methods to ignore, wins over allowed methods. Default: None.
-        """  # noqa: E501
+        """  # ruff: ignore[line-too-long]
         self.app = app
         self.assume_https = assume_https
         self.lifespan_context = _DefaultLifespan(self)
@@ -265,7 +265,7 @@ class MatomoMiddleware:
                         "content": tracking_response.text,
                     },
                 )
-                if tracking_response.status_code >= 300:  # noqa: PLR2004
+                if tracking_response.status_code >= 300:  # ruff: ignore[magic-value-comparison]
                     logger.error(
                         "Tracking call failed (status_code=%d)",
                         tracking_response.status_code,
@@ -345,5 +345,6 @@ class MatomoMiddleware:
             "lang": lang,
             "referrer": urlref,
             "remote_addr": cip,
-            "forwarded_for": server,
+            # "forwarded_for": server,
+            "forwarded_for": cip,
         }

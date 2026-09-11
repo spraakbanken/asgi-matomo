@@ -9,7 +9,7 @@ from starlette.routing import Route
 from asgi_matomo import MatomoMiddleware
 
 
-async def foo(_request: Request) -> JSONResponse:  # noqa: RUF029
+async def foo(_request: Request) -> JSONResponse:  # ruff: ignore[unused-async]
     """Pretend this route return something useful."""
     return JSONResponse({"name": "foo"})
 

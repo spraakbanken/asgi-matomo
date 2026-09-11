@@ -13,12 +13,12 @@ from asgi_matomo import MatomoMiddleware
 
 
 @dataclass
-class MockResponse:  # noqa: D101
+class MockResponse:  # ruff: ignore[undocumented-public-class]
     status_code: int
     text: str = "response"
 
 
-def create_matomo_client() -> mock.AsyncMock:  # noqa: D103
+def create_matomo_client() -> mock.AsyncMock:  # ruff: ignore[undocumented-public-function]
     matomo_client = mock.AsyncMock(AsyncClient)
     matomo_client.post = mock.AsyncMock(return_value=MockResponse(status_code=204))
     return matomo_client
@@ -50,6 +50,6 @@ def test_app() -> None:
     """Test that the matomo_client is called."""
     client = TestClient(app)
     response = client.get("/foo")
-    assert response.status_code == 200  # noqa: PLR2004
+    assert response.status_code == 200  # ruff: ignore[magic-value-comparison]
 
     matomo_client.post.assert_awaited()

@@ -1,7 +1,7 @@
 {
   "action_name": "/foo",
   "apiv": "1",
-  "cip": "testserver",
+  "cip": "127.0.0.1",
   "cvar": "{\"http_status_code\": 200, \"http_method\": \"GET\"}",
   "gt_ms": "float",
   "idsite": "1",

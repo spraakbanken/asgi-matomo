@@ -13,7 +13,6 @@ classifiers = [
   "Environment :: Web Environment",
   "Framework :: FastAPI",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3.10",
@@ -26,7 +25,7 @@ classifiers = [
   "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = ["asgiref>=3.6.0", "httpx>=0.24", "matomo-core>=0.3.1"]
+dependencies = ["asgiref>=3.6.0", "httpx>=0.24", "matomo-core>=0.3.4"]
 
 [project.urls]
 "Bug Tracker" = "https://github.com/spraakbanken/asgi-matomo/issues"
@@ -39,7 +38,7 @@ dev = [
   "pytest>=8.3.5",
   "pytest-asyncio>=0.25.3",
   "pytest-cov>=6.0.0",
-  "ruff>=0.9.10",
+  "ruff>=0.16.6",
   "starlette>=0.46.1",
   "syrupy>=4.9.0",
   "ty>=0.0.20",
@@ -54,8 +53,11 @@ docs = [
 ]
 
 [build-system]
-requires = ["uv_build>=0.10,<0.11"]
+requires = ["uv_build>=0.10,<0.12"]
 build-backend = "uv_build"
+
+[tool.uv]
+exclude-newer = "P7D"
 
 [tool.uv.build-backend]
 module-name = "asgi_matomo"

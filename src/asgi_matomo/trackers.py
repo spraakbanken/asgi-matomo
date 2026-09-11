@@ -5,7 +5,7 @@ import typing
 import matomo_core.trackers
 
 
-def PerfMsTracker(  # noqa: N802
+def PerfMsTracker(  # ruff: ignore[invalid-function-name]
     scope: typing.MutableMapping[str, typing.Any], key: str
 ) -> matomo_core.trackers.PerfMsTracker:
     """Measure time between enter and exit and records it in state.
