@@ -45,15 +45,15 @@ You can also pass variable to track by adding an `asgi_matomo` dict in the `stat
 
 ```python
 scope = {
-  "state": {
-    "asgi_matomo": {
-      "e_a": "Playing",
-      "cvar": {
-        "your": "custom",
-        "data": "here",
-      }
+    "state": {
+        "asgi_matomo": {
+            "e_a": "Playing",
+            "cvar": {
+                "your": "custom",
+                "data": "here",
+            },
+        }
     }
-  }
 }
 ```
 
@@ -71,21 +71,24 @@ from starlette.middleware import Middleware
 from asgi_matomo import MatomoMiddleware
 from asgi_matomo.trackers import PerfMsTracker
 
+
 async def homepage(request):
     async with PerfMsTracker(scope=request.scope, key="pf_srv"):
         # fetch/compute data
         await asyncio.sleep(1)
-        data = {"data": "a"*4000}
+        data = {"data": "a" * 4000}
     return JSONResponse(data)
 
+
 app = Starlette(
-  routes=[Route("/", homepage)],
-  middleware=[
-    Middleware(
-      MatomoMiddleware,
-      matomo_url="YOUR MATOMO TRACKING URL",
-      idsite=12345, # your service tracking id
-  )],
+    routes=[Route("/", homepage)],
+    middleware=[
+        Middleware(
+            MatomoMiddleware,
+            matomo_url="YOUR MATOMO TRACKING URL",
+            idsite=12345,  # your service tracking id
+        )
+    ],
 )
 ```
 
@@ -101,17 +104,20 @@ from starlette.middleware import Middleware
 
 from asgi_matomo import MatomoMiddleware
 
+
 async def homepage(request):
     return JSONResponse({"data": "a" * 4000})
 
+
 app = Starlette(
-  routes=[Route("/", homepage)],
-  middleware=[
-    Middleware(
-      MatomoMiddleware,
-      matomo_url="YOUR MATOMO TRACKING URL",
-      idsite=12345, # your service tracking id
-  )],
+    routes=[Route("/", homepage)],
+    middleware=[
+        Middleware(
+            MatomoMiddleware,
+            matomo_url="YOUR MATOMO TRACKING URL",
+            idsite=12345,  # your service tracking id
+        )
+    ],
 )
 ```
 
@@ -123,10 +129,11 @@ from asgi_matomo import MatomoMiddleware
 
 app = FastAPI()
 app.add_middleware(
-  MatomoMiddleware,
-  matomo_url="YOUR MATOMO TRACKING URL",
-  idsite=12345, # your service tracking id
+    MatomoMiddleware,
+    matomo_url="YOUR MATOMO TRACKING URL",
+    idsite=12345,  # your service tracking id
 )
+
 
 @app.get("/")
 def home() -> dict:
