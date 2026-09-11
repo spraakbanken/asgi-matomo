@@ -133,7 +133,7 @@ def fixture_app_wo_middleware(
 
 @pytest_asyncio.fixture(name="client")
 async def fixture_client(app: Starlette) -> AsyncGenerator[AsyncClient, None]:
-    async with LifespanManager(app):  # noqa: SIM117
+    async with LifespanManager(app):  # ruff: ignore[multiple-with-statements]
         async with AsyncClient(
             transport=ASGITransport(app), base_url="http://testserver"
         ) as client:
@@ -144,7 +144,7 @@ async def fixture_client(app: Starlette) -> AsyncGenerator[AsyncClient, None]:
 async def fixture_client_w_token(
     app_w_token: Starlette,
 ) -> AsyncGenerator[AsyncClient, None]:
-    async with LifespanManager(app_w_token):  # noqa: SIM117
+    async with LifespanManager(app_w_token):  # ruff: ignore[multiple-with-statements]
         async with AsyncClient(
             transport=ASGITransport(app_w_token), base_url="http://testserver"
         ) as client:
@@ -155,7 +155,7 @@ async def fixture_client_w_token(
 async def fixture_client_wo_middleware(
     app_wo_middleware: Starlette,
 ) -> AsyncGenerator[AsyncClient, None]:
-    async with LifespanManager(app_wo_middleware):  # noqa: SIM117
+    async with LifespanManager(app_wo_middleware):  # ruff: ignore[multiple-with-statements]
         async with AsyncClient(
             transport=ASGITransport(app_wo_middleware), base_url="http://testserver"
         ) as client:
@@ -330,7 +330,7 @@ async def test_matomo_client_gets_called_on_post_baz(
 @pytest.mark.asyncio
 async def test_real_async_client_is_created(settings: dict[str, t.Any]) -> None:
     app = create_app(None, settings)
-    async with LifespanManager(app):  # noqa: SIM117
+    async with LifespanManager(app):  # ruff: ignore[multiple-with-statements]
         async with AsyncClient(
             transport=ASGITransport(app), base_url="http://testserver"
         ) as client:
@@ -354,11 +354,11 @@ async def test_foo2_has_custom_action_name(
 async def test_middleware_handles_lifespan_startups_errors() -> None:
     # sourcery skip: remove-unreachable-code
     @contextlib.asynccontextmanager
-    async def custom_lifespan(_app: ASGIApp):  # noqa: ANN202, RUF029
+    async def custom_lifespan(_app: ASGIApp):  # ruff: ignore[missing-return-type-private-function]
         raise RuntimeError("startup failure")
         yield
 
-    async def homepage(_request: Request):  # noqa: ANN202, RUF029
+    async def homepage(_request: Request):  # ruff: ignore[missing-return-type-private-function, unused-async]
         return JSONResponse({"a": "b"})
 
     app = Starlette(
@@ -381,10 +381,10 @@ async def test_middleware_handles_lifespan_startups_errors() -> None:
         "state": {},
     }
 
-    async def receive() -> dict[str, str]:  # noqa: RUF029
+    async def receive() -> dict[str, str]:  # ruff: ignore[unused-async]
         return {"type": "lifespan.startup"}
 
-    async def send(message: MutableMapping[str, t.Any]) -> None:  # noqa: RUF029
+    async def send(message: MutableMapping[str, t.Any]) -> None:  # ruff: ignore[unused-async]
         assert message["type"] in {
             "lifespan.startup.complete",
             "lifespan.startup.failed",
@@ -399,11 +399,11 @@ async def test_middleware_handles_lifespan_startups_errors() -> None:
 @pytest.mark.asyncio
 async def test_middleware_handles_lifespan_shutdown_errors() -> None:
     @contextlib.asynccontextmanager
-    async def custom_lifespan(_app: ASGIApp):  # noqa: ANN202, RUF029
+    async def custom_lifespan(_app: ASGIApp):  # ruff: ignore[missing-return-type-private-function]
         yield
         raise RuntimeError("shutdown failure")
 
-    async def homepage(_request: Request) -> JSONResponse:  # noqa: RUF029
+    async def homepage(_request: Request) -> JSONResponse:  # ruff: ignore[unused-async]
         return JSONResponse({"a": "b"})
 
     app = Starlette(
@@ -426,10 +426,10 @@ async def test_middleware_handles_lifespan_shutdown_errors() -> None:
         "state": {},
     }
 
-    async def receive() -> dict[str, t.Any]:  # noqa: RUF029
+    async def receive() -> dict[str, t.Any]:  # ruff: ignore[unused-async]
         return {"type": "lifespan.shutdown"}
 
-    async def send(message: MutableMapping[str, t.Any]) -> None:  # noqa: RUF029
+    async def send(message: MutableMapping[str, t.Any]) -> None:  # ruff: ignore[unused-async]
         assert message["type"] in {
             "lifespan.startup.complete",
             "lifespan.startup.failed",
