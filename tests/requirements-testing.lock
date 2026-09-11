@@ -33,7 +33,7 @@ idna==3.11
     #   httpx
 iniconfig==2.3.0
     # via pytest
-matomo-core==0.3.3
+matomo-core==0.3.4
     # via asgi-matomo
 packaging==26.0
     # via pytest
