@@ -81,7 +81,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=6.0.0" },
     { name = "ruff", specifier = ">=0.16.6" },
     { name = "starlette", specifier = ">=0.46.1" },
-    { name = "syrupy", specifier = ">=4.9.0" },
+    { name = "syrupy", specifier = ">=6.0.0" },
     { name = "ty", specifier = ">=0.0.20" },
 ]
 docs = [
