@@ -43,7 +43,7 @@ dev = [
   "pytest-asyncio>=0.25.3",
   "pytest-cov>=6.0.0",
   "ruff>=0.16.6",
-  "starlette>=0.46.1",
+  "starlette>=1.6.0",
   "syrupy>=6.0.0",
   "ty>=0.0.20",
 ]
