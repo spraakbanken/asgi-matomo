@@ -8,7 +8,7 @@ from unittest import mock
 import pytest
 import pytest_asyncio
 from asgi_lifespan import LifespanManager
-from httpx import ASGITransport, AsyncClient
+from httpx2 import ASGITransport, AsyncClient
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
 from starlette.middleware import Middleware
@@ -163,7 +163,11 @@ async def fixture_client_wo_middleware(
 
 
 def make_matcher(**kwargs: tuple[type[t.Any], ...]) -> PropertyMatcher:
-    path_types: dict[str, tuple[type[t.Any], ...]] = {"gt_ms": (float,), "rand": (int,)}
+    path_types: dict[str, tuple[type[t.Any], ...]] = {
+        "gt_ms": (float,),
+        "rand": (int,),
+        "ua": (bytes,),
+    }
     if kwargs:
         path_types.update(kwargs)
     return matchers.path_type(path_types)

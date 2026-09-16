@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from unittest import mock
 
-from httpx import AsyncClient
+from httpx2 import AsyncClient
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse
