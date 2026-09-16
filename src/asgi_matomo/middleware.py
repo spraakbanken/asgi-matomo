@@ -8,7 +8,7 @@ from collections.abc import AsyncIterator
 from contextlib import AsyncExitStack, asynccontextmanager
 from typing import Any, Literal
 
-import httpx
+import httpx2 as httpx
 from asgiref.typing import (
     ASGI3Application,
     ASGIReceiveCallable,
