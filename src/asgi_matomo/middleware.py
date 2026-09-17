@@ -80,7 +80,7 @@ class MatomoMiddleware:
         self.app = app
         self.assume_https = assume_https
         self.lifespan_context = _DefaultLifespan(self)
-        self.client = client or httpx.AsyncClient(timeout=http_timeout)
+        self.client = client or httpx.AsyncClient(timeout=http_timeout, follow_redirects=True)
         self.matomo_core: MatomoCore = MatomoCore(
             matomo_url=matomo_url,
             id_site=idsite,
