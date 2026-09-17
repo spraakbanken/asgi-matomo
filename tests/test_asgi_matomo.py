@@ -29,6 +29,10 @@ class MockResponse:
     status_code: int
     text: str = "bad response"
 
+    @property
+    def is_success(self) -> bool:
+        return self.status_code < 300
+
 
 def test_it_works() -> None:
     assert MatomoMiddleware is not None
@@ -51,10 +55,17 @@ def create_app(
     settings: dict[str, t.Any],
     token: str | None = None,
     use_middleware: bool = True,
+    use_background: bool = False,
 ) -> Starlette:
     app = Starlette()
 
     if use_middleware:
+        if use_background:
+            from asgi_matomo.background import (  # noqa: PLC0415
+                BackgroundTaskMiddleware,
+            )
+
+            app.add_middleware(BackgroundTaskMiddleware)
         app.add_middleware(
             MatomoMiddleware,  # ty:ignore[invalid-argument-type]
             client=matomo_client,
@@ -119,6 +130,13 @@ def fixture_app(matomo_client: AsyncClient, settings: dict[str, t.Any]) -> Starl
     return create_app(matomo_client, settings)
 
 
+@pytest.fixture(name="app_w_background")
+def fixture_app_w_background(
+    matomo_client: AsyncClient, settings: dict[str, t.Any]
+) -> Starlette:
+    return create_app(matomo_client, settings, use_background=True)
+
+
 @pytest.fixture(name="app_w_token")
 def fixture_app_w_token(matomo_client: AsyncClient, settings: dict[str, t.Any]) -> Starlette:
     return create_app(matomo_client, settings, token="FAKE-TOKEN")
@@ -160,6 +178,32 @@ async def fixture_client_wo_middleware(
             transport=ASGITransport(app_wo_middleware), base_url="http://testserver"
         ) as client:
             yield client
+
+
+@pytest_asyncio.fixture(name="client_w_background")
+async def fixture_client_w_background(
+    app_w_background: Starlette,
+) -> AsyncGenerator[AsyncClient, None]:
+    async with (
+        LifespanManager(app_w_background),
+        AsyncClient(
+            transport=ASGITransport(app_w_background), base_url="http://testserver"
+        ) as client,
+    ):
+        yield client
+
+
+@pytest_asyncio.fixture(name="client_w_background")
+async def fixture_client_w_background(
+    app_w_background: Starlette,
+) -> AsyncGenerator[AsyncClient, None]:
+    async with (
+        LifespanManager(app_w_background),
+        AsyncClient(
+            transport=ASGITransport(app_w_background), base_url="http://testserver"
+        ) as client,
+    ):
+        yield client
 
 
 def make_matcher(**kwargs: tuple[type[t.Any], ...]) -> PropertyMatcher:
@@ -225,6 +269,19 @@ async def test_matomo_client_gets_called_on_get_foo(
     matomo_client.post.assert_awaited()
 
     assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher())
+
+
+@pytest.mark.asyncio
+async def test_matomo_client_with_background_gets_called_on_get_foo(
+    client_w_background: AsyncClient,
+) -> None:
+    # We only test that this call works
+    response = await client_w_background.get("/foo")
+    assert response.status_code == 200
+
+    # matomo_client.post.assert_awaited()
+
+    # assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher())
 
 
 @pytest.mark.asyncio

@@ -17,6 +17,9 @@ class MockResponse:  # ruff: ignore[undocumented-public-class]
     status_code: int
     text: str = "response"
 
+    @property
+    def is_success(self) -> bool:
+        return self.status_code < 300
 
 def create_matomo_client() -> mock.AsyncMock:  # ruff: ignore[undocumented-public-function]
     matomo_client = mock.AsyncMock(AsyncClient)

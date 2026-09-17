@@ -54,7 +54,7 @@ dev: install-dev
 
 ## setup development environment
 install-dev: install-pre-commit
-	uv sync --all-packages --dev
+	uv sync --all-packages --dev --all-extras
 
 ## install pre-commit hooks
 install-pre-commit: .git/hooks/pre-commit

@@ -2,11 +2,10 @@
 
 import logging
 import traceback
-import typing
+import typing as t
 import urllib.parse
 from collections.abc import AsyncIterator
 from contextlib import AsyncExitStack, asynccontextmanager
-from typing import Any, Literal
 
 import httpx2 as httpx
 from asgiref.typing import (
@@ -20,10 +19,17 @@ from asgiref.typing import (
 )
 from matomo_core import MatomoCore
 
+try:
+    import asgi_background
+
+    asgi_background_is_installed = True
+except ImportError:
+    asgi_background_is_installed = False
+
 logger = logging.getLogger(__name__)
 
 
-_T = typing.TypeVar("_T")
+_T = t.TypeVar("_T")
 
 
 class _DefaultLifespan:
@@ -56,7 +62,7 @@ class MatomoMiddleware:
         exclude_paths: list[str] | None = None,
         exclude_patterns: list[str] | None = None,
         route_details: dict[str, dict[str, str]] | None = None,
-        allowed_methods: list[str] | Literal["all-methods"] = "all-methods",
+        allowed_methods: list[str] | t.Literal["all-methods"] = "all-methods",
         ignored_methods: list[str] | None = None,
     ) -> None:
         """Initialize the Matomo middleware.
@@ -206,7 +212,7 @@ class MatomoMiddleware:
         # local variable within that function, with that name.
         instance = {"http_status_code": 500}
 
-        def send_wrapper(response: ASGISendEvent) -> Any:
+        def send_wrapper(response: ASGISendEvent) -> t.Any:
             if response["type"] == "http.response.start":
                 instance["http_status_code"] = response["status"]
             return send(response)
@@ -251,33 +257,25 @@ class MatomoMiddleware:
             tracking_data = MatomoCore.prepare_tracking_data_for_matomo(
                 scope["state"]["asgi_matomo"], exc=exc
             )
-            logger.debug(
-                "Making tracking call to '%s'",
-                self.matomo_url,
-                extra={"tracking_data": tracking_data},
-            )
-            try:
-                tracking_response = await self.client.post(self.matomo_url, data=tracking_data)
+            if tracking_data is not None:
                 logger.debug(
-                    "tracking response",
-                    extra={
-                        "status": tracking_response.status_code,
-                        "content": tracking_response.text,
-                    },
+                    "Making tracking call to '%s'",
+                    self.matomo_url,
+                    extra={"tracking_data": tracking_data},
                 )
-                if tracking_response.status_code >= 300:  # ruff: ignore[magic-value-comparison]
-                    logger.error(
-                        "Tracking call failed (status_code=%d)",
-                        tracking_response.status_code,
-                        extra={
-                            "status_code": tracking_response.status_code,
-                            "text": tracking_response.text,
-                        },
-                    )
-            except httpx.HTTPError:
-                logger.exception("Error tracking view")
+                if asgi_background_is_installed is None or "asgi-background.tasks" not in scope:
+                    await self._make_tracking_call(tracking_data)
+                else:
+                    tasks = asgi_background.BackgroundTasks(scope)  # ty: ignore[invalid-argument-type]
+                    await tasks.add_task(self._make_tracking_call, tracking_data)
+            else:
+                logger.debug(
+                    "No tracking data prepared, skipping tracking call to '%s'",
+                    self.matomo_url,
+                    extra={"tracking_state": scope["state"]["asgi_matomo"]},
+                )
 
-    def _build_tracking_state(self, scope: HTTPScope) -> dict[str, Any]:
+    def _build_tracking_state(self, scope: HTTPScope) -> dict[str, t.Any]:
         server = None
         user_agent = None
         lang = None
@@ -348,3 +346,25 @@ class MatomoMiddleware:
             # "forwarded_for": server,
             "forwarded_for": cip,
         }
+
+    async def _make_tracking_call(self, tracking_data: dict[str, t.Any]) -> None:
+        try:
+            tracking_response = await self.client.post(self.matomo_url, data=tracking_data)
+            logger.debug(
+                "tracking response",
+                extra={
+                    "status": tracking_response.status_code,
+                    "content": tracking_response.text,
+                },
+            )
+            if not tracking_response.is_success:
+                logger.error(
+                    "Tracking call failed (status_code=%d)",
+                    tracking_response.status_code,
+                    extra={
+                        "status": tracking_response.status_code,
+                        "content": tracking_response.text,
+                    },
+                )
+        except httpx.HTTPError:
+            logger.exception("Error tracking view")
