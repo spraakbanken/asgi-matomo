@@ -9,7 +9,7 @@ from starlette.routing import Route
 from asgi_matomo import MatomoMiddleware
 
 
-async def foo(request: Request) -> JSONResponse:  # ruff: ignore[unused-async]
+async def foo(request: Request) -> JSONResponse:
     """Store custom data during a request."""
     request.scope["state"]["asgi_matomo"]["custom_tracking_data"] = {
         "action_name": "Foo/foo",

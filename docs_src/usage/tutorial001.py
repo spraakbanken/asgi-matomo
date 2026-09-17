@@ -9,7 +9,7 @@ from starlette.routing import Route
 from asgi_matomo import MatomoMiddleware
 
 
-async def homepage(_request: Request) -> JSONResponse:  # ruff: ignore[undocumented-public-function, unused-async]
+async def homepage(_request: Request) -> JSONResponse:
     return JSONResponse({"data": 4000})
 
 

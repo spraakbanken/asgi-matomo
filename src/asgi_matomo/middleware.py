@@ -42,7 +42,7 @@ class _DefaultLifespan:
     async def __aexit__(self, *exc_info: object) -> None:
         await self._app.shutdown()
 
-    def __call__(self: _T, app: object) -> _T:  # ruff: ignore[unused-method-argument]
+    def __call__(self: _T, app: object) -> _T:  # noqa: ARG002
         return self
 
 
@@ -82,7 +82,7 @@ class MatomoMiddleware:
             route_details: mapping of details for each path
             allowed_methods: list of methods to track or "all-methods". Default: "all-methods".
             ignored_methods: list of methods to ignore, wins over allowed methods. Default: None.
-        """  # ruff: ignore[line-too-long]
+        """  # ruff: ignore[E501]
         self.app = app
         self.assume_https = assume_https
         self.lifespan_context = _DefaultLifespan(self)
