@@ -50,7 +50,7 @@ dev = [
   "ruff>=0.16.6",
   "starlette>=1.6.0",
   "syrupy>=6.0.0",
-  "ty>=0.0.20",
+  "ty>=0.0.79",
 ]
 docs = [
   "markdown>=3.5.1",
