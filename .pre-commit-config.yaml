@@ -13,7 +13,6 @@ repos:
     rev: 0.12.9
     hooks:
       - id: uv-lock
-        args: ["--exclude-newer=P7D"]
       # Update the uv lockfile
       - id: uv-export
         args:
@@ -23,7 +22,7 @@ repos:
             "--no-hashes",
             "--no-emit-project",
             "--output-file=tests/requirements-testing.lock",
-            "--exclude-newer=P7D",
+            "--all-extras",
           ]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

@@ -28,6 +28,18 @@ Tracking requests with Matomo from ASGI apps.
 pip install asgi-matomo
 ```
 
+Or, to add to your project:
+
+```bash
+uv add asgi-matomo
+```
+
+Alternative with the `background` extra:
+
+```bash
+uv add 'asgi-matomo[background]'
+```
+
 ## What is tracked
 
 Currently this middleware tracks:
@@ -121,6 +133,37 @@ app = Starlette(
 )
 ```
 
+### Starlette with background tasks
+
+Note that `BackgroundTaskMiddleware` needs to be added **after** `MatomoMiddleware`.
+
+```python
+from starlette.applications import Starlette
+from starlette.responses import JSONResponse
+from starlette.routing import Route
+from starlette.middleware import Middleware
+
+from asgi_matomo import MatomoMiddleware
+from asgi_matomo.background import BackgroundTaskMiddleware
+
+
+async def homepage(request):
+    return JSONResponse({"data": "a" * 4000})
+
+
+app = Starlette(
+    routes=[Route("/", homepage)],
+    middleware=[
+        Middleware(
+            MatomoMiddleware,
+            matomo_url="YOUR MATOMO TRACKING URL",
+            idsite=12345,  # your service tracking id
+        ),
+        Middleware(BackgroundTaskMiddleware),
+    ],
+)
+```
+
 ### FastAPI
 
 ```python
@@ -133,6 +176,29 @@ app.add_middleware(
     matomo_url="YOUR MATOMO TRACKING URL",
     idsite=12345,  # your service tracking id
 )
+
+
+@app.get("/")
+def home() -> dict:
+    return {"data": "a" * 4000}
+```
+
+### FastAPI with background tasks
+
+Note that `BackgroundTaskMiddleware` needs to be added **after** `MatomoMiddleware`.
+
+```python
+from fastapi import FastAPI
+from asgi_matomo import MatomoMiddleware
+from asgi_matomo.background import BackgroundTaskMiddleware
+
+app = FastAPI()
+app.add_middleware(
+    MatomoMiddleware,
+    matomo_url="YOUR MATOMO TRACKING URL",
+    idsite=12345,  # your service tracking id
+)
+app.add_middleware(BackgroundTaskMiddleware)
 
 
 @app.get("/")

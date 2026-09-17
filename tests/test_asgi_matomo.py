@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 import time
 import typing as t
@@ -29,6 +30,10 @@ class MockResponse:
     status_code: int
     text: str = "bad response"
 
+    @property
+    def is_success(self) -> bool:
+        return self.status_code < 300
+
 
 def test_it_works() -> None:
     assert MatomoMiddleware is not None
@@ -51,12 +56,13 @@ def create_app(
     settings: dict[str, t.Any],
     token: str | None = None,
     use_middleware: bool = True,
+    use_background: bool = False,
 ) -> Starlette:
     app = Starlette()
 
     if use_middleware:
         app.add_middleware(
-            MatomoMiddleware,  # ty:ignore[invalid-argument-type]
+            MatomoMiddleware,
             client=matomo_client,
             matomo_url="http://trackingserver",
             idsite=settings["idsite"],
@@ -67,6 +73,12 @@ def create_app(
             allowed_methods=["GET", "PoST", "HEAD", "OPTIONS"],
             ignored_methods=["OptiOns"],
         )
+        if use_background:
+            from asgi_matomo.background import (  # noqa: PLC0415
+                BackgroundTaskMiddleware,
+            )
+
+            app.add_middleware(BackgroundTaskMiddleware)
 
     def foo(_request: Request) -> PlainTextResponse:
         return PlainTextResponse("foo")
@@ -119,6 +131,13 @@ def fixture_app(matomo_client: AsyncClient, settings: dict[str, t.Any]) -> Starl
     return create_app(matomo_client, settings)
 
 
+@pytest.fixture(name="app_w_background")
+def fixture_app_w_background(
+    matomo_client: AsyncClient, settings: dict[str, t.Any]
+) -> Starlette:
+    return create_app(matomo_client, settings, use_background=True)
+
+
 @pytest.fixture(name="app_w_token")
 def fixture_app_w_token(matomo_client: AsyncClient, settings: dict[str, t.Any]) -> Starlette:
     return create_app(matomo_client, settings, token="FAKE-TOKEN")
@@ -133,33 +152,50 @@ def fixture_app_wo_middleware(
 
 @pytest_asyncio.fixture(name="client")
 async def fixture_client(app: Starlette) -> AsyncGenerator[AsyncClient, None]:
-    async with LifespanManager(app):  # ruff: ignore[multiple-with-statements]
-        async with AsyncClient(
-            transport=ASGITransport(app), base_url="http://testserver"
-        ) as client:
-            yield client
+    async with (
+        LifespanManager(app),
+        AsyncClient(transport=ASGITransport(app), base_url="http://testserver") as client,
+    ):
+        yield client
 
 
 @pytest_asyncio.fixture(name="client_w_token")
 async def fixture_client_w_token(
     app_w_token: Starlette,
 ) -> AsyncGenerator[AsyncClient, None]:
-    async with LifespanManager(app_w_token):  # ruff: ignore[multiple-with-statements]
-        async with AsyncClient(
+    async with (
+        LifespanManager(app_w_token),
+        AsyncClient(
             transport=ASGITransport(app_w_token), base_url="http://testserver"
-        ) as client:
-            yield client
+        ) as client,
+    ):
+        yield client
 
 
 @pytest_asyncio.fixture(name="client_wo_middleware")
 async def fixture_client_wo_middleware(
     app_wo_middleware: Starlette,
 ) -> AsyncGenerator[AsyncClient, None]:
-    async with LifespanManager(app_wo_middleware):  # ruff: ignore[multiple-with-statements]
-        async with AsyncClient(
+    async with (
+        LifespanManager(app_wo_middleware),
+        AsyncClient(
             transport=ASGITransport(app_wo_middleware), base_url="http://testserver"
-        ) as client:
-            yield client
+        ) as client,
+    ):
+        yield client
+
+
+@pytest_asyncio.fixture(name="client_w_background")
+async def fixture_client_w_background(
+    app_w_background: Starlette,
+) -> AsyncGenerator[AsyncClient, None]:
+    async with (
+        LifespanManager(app_w_background),
+        AsyncClient(
+            transport=ASGITransport(app_w_background), base_url="http://testserver"
+        ) as client,
+    ):
+        yield client
 
 
 def make_matcher(**kwargs: tuple[type[t.Any], ...]) -> PropertyMatcher:
@@ -222,6 +258,22 @@ async def test_matomo_client_gets_called_on_get_foo(
     response = await client.get("/foo")
     assert response.status_code == 200
 
+    matomo_client.post.assert_awaited()
+
+    assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher())
+
+
+@pytest.mark.asyncio
+async def test_matomo_client_with_background_gets_called_on_get_foo(
+    client_w_background: AsyncClient,
+    matomo_client: mock.AsyncMock,
+    snapshot_json: SnapshotAssertion,
+) -> None:
+    # We only test that this call works
+    response = await client_w_background.get("/foo")
+    assert response.status_code == 200
+
+    await asyncio.sleep(0.1)
     matomo_client.post.assert_awaited()
 
     assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher())
@@ -334,12 +386,12 @@ async def test_matomo_client_gets_called_on_post_baz(
 @pytest.mark.asyncio
 async def test_real_async_client_is_created(settings: dict[str, t.Any]) -> None:
     app = create_app(None, settings)
-    async with LifespanManager(app):  # ruff: ignore[multiple-with-statements]
-        async with AsyncClient(
-            transport=ASGITransport(app), base_url="http://testserver"
-        ) as client:
-            response = await client.get("/health")
-            assert response.status_code == 200
+    async with (
+        LifespanManager(app),
+        AsyncClient(transport=ASGITransport(app), base_url="http://testserver") as client,
+    ):
+        response = await client.get("/health")
+        assert response.status_code == 200
 
 
 @pytest.mark.asyncio
@@ -358,18 +410,18 @@ async def test_foo2_has_custom_action_name(
 async def test_middleware_handles_lifespan_startups_errors() -> None:
     # sourcery skip: remove-unreachable-code
     @contextlib.asynccontextmanager
-    async def custom_lifespan(_app: ASGIApp):  # ruff: ignore[missing-return-type-private-function]
+    async def custom_lifespan(_app: ASGIApp):
         raise RuntimeError("startup failure")
         yield
 
-    async def homepage(_request: Request):  # ruff: ignore[missing-return-type-private-function, unused-async]
+    async def homepage(_request: Request):
         return JSONResponse({"a": "b"})
 
     app = Starlette(
         routes=[Route("/", homepage)],
         middleware=[
             Middleware(
-                MatomoMiddleware,  # ty:ignore[invalid-argument-type]
+                MatomoMiddleware,
                 matomo_url="YOUR MATOMO TRACKING URL",
                 idsite=12345,  # your service tracking id
             )
@@ -385,10 +437,10 @@ async def test_middleware_handles_lifespan_startups_errors() -> None:
         "state": {},
     }
 
-    async def receive() -> dict[str, str]:  # ruff: ignore[unused-async]
+    async def receive() -> dict[str, str]:
         return {"type": "lifespan.startup"}
 
-    async def send(message: MutableMapping[str, t.Any]) -> None:  # ruff: ignore[unused-async]
+    async def send(message: MutableMapping[str, t.Any]) -> None:
         assert message["type"] in {
             "lifespan.startup.complete",
             "lifespan.startup.failed",
@@ -403,18 +455,18 @@ async def test_middleware_handles_lifespan_startups_errors() -> None:
 @pytest.mark.asyncio
 async def test_middleware_handles_lifespan_shutdown_errors() -> None:
     @contextlib.asynccontextmanager
-    async def custom_lifespan(_app: ASGIApp):  # ruff: ignore[missing-return-type-private-function]
+    async def custom_lifespan(_app: ASGIApp):
         yield
         raise RuntimeError("shutdown failure")
 
-    async def homepage(_request: Request) -> JSONResponse:  # ruff: ignore[unused-async]
+    async def homepage(_request: Request) -> JSONResponse:
         return JSONResponse({"a": "b"})
 
     app = Starlette(
         routes=[Route("/", homepage)],
         middleware=[
             Middleware(
-                MatomoMiddleware,  # ty:ignore[invalid-argument-type]
+                MatomoMiddleware,
                 matomo_url="YOUR MATOMO TRACKING URL",
                 idsite=12345,  # your service tracking id
             )
@@ -430,10 +482,10 @@ async def test_middleware_handles_lifespan_shutdown_errors() -> None:
         "state": {},
     }
 
-    async def receive() -> dict[str, t.Any]:  # ruff: ignore[unused-async]
+    async def receive() -> dict[str, t.Any]:
         return {"type": "lifespan.shutdown"}
 
-    async def send(message: MutableMapping[str, t.Any]) -> None:  # ruff: ignore[unused-async]
+    async def send(message: MutableMapping[str, t.Any]) -> None:
         assert message["type"] in {
             "lifespan.startup.complete",
             "lifespan.startup.failed",

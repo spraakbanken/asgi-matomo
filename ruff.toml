@@ -11,8 +11,8 @@ select = [
   "C4",  # flake8-comprehensions
   "COM",  # flake8-commas
   "D",  # pydocstyle
-  "missing-trailing-period",  # pydocstyle: ends-in-period
-  "non-imperative-mood",  # pydocstyle: non-imperative-mood
+  "D400",  # pydocstyle: ends-in-period
+  "D401",  # pydocstyle: non-imperative-mood
   "E",  # pycodestyle: errors
   "F",  # Pyflakes
   "FLY",  # flynt
@@ -37,14 +37,11 @@ select = [
   "W",  # pycodestyle: warnings
 ]
 ignore = [
-  "any-type",  # flake8-annotations: any-type
-  "function-call-in-default-argument",  # flake8-bugbear: function-call-in-default-argument
-  "single-line-implicit-string-concatenation",
-  "missing-trailing-comma",  # flake8-commas: missing-trailing-comma
+  "ANN401",  # flake8-annotations: any-type
+  "B008",  # flake8-bugbear: function-call-in-default-argument
+  "COM812",  # flake8-commas: missing-trailing-comma
   "PLR09",  # Pylint: too-many-*
-  "suppressible-exception",  # flake8-simplify: suppressible-exception
 ]
-preview = true
 
 # Avoid trying to fix flake8-bugbear (`B`) violations.
 unfixable = ["B"]
@@ -54,5 +51,6 @@ convention = "google"
 
 # Ignore `E402` (import violations) in all `__init__.py` files, and in `path/to/file.py`.
 [lint.per-file-ignores]
-"tests/*" = ["D", "unused-method-argument", "line-too-long", "magic-value-comparison", "fallible-context-manager"]
-"examples/*.py" = ["D", "print", "missing-type-function-argument", "unused-function-argument", "missing-return-type-undocumented-public-function", "fallible-context-manager"]
+"docs_src/**/*.py" = ["D", "PLR2004"]
+"examples/*.py" = ["D", "T201", "ANN001", "ARG001", "ANN201", "RUF075"]
+"tests/*" = ["D", "ARG002", "E501", "PLR2004", "RUF075", "ANN202"]

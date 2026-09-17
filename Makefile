@@ -54,7 +54,7 @@ dev: install-dev
 
 ## setup development environment
 install-dev: install-pre-commit
-	uv sync --all-packages --dev
+	uv sync --all-packages --dev --all-extras
 
 ## install pre-commit hooks
 install-pre-commit: .git/hooks/pre-commit
@@ -134,7 +134,7 @@ prepare-release: update-changelog tests/requirements-testing.lock
 
 # we use lock extension so that dependabot doesn't pick up changes in this file
 tests/requirements-testing.lock: pyproject.toml
-	uv export --dev --format requirements-txt --no-hashes --no-emit-project --output-file $@
+	uv export --dev --format requirements-txt --no-hashes --no-emit-project --output-file --all-extras $@
 
 .PHONY: update-changelog
 ## update changelog from git history
