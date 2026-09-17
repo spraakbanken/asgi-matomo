@@ -25,6 +25,19 @@ wheels = [
 ]
 
 [[package]]
+name = "asgi-background"
+version = "0.2.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "asgi-lifespan-middleware" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4f/a6/972a433cf7329307e23db2b5f5b6b7ae82a18152e0e83de5fd56857bc240/asgi_background-0.2.2.tar.gz", hash = "sha256:5046aa0c54690ac980bfe8049b9d3288b352c29d35720397f83be7e825c0f598", size = 4918, upload-time = "2022-10-27T03:17:31.714Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c6/c8/302c68d5b00a15eaa6599634d742df392a834af3337c62d0cb0f7440adb2/asgi_background-0.2.2-py3-none-any.whl", hash = "sha256:3d928d74b313fd45ddeeb77272fd7f6edb239cbeee5d0359c4684dca4990ca23", size = 5279, upload-time = "2022-10-27T03:17:30.207Z" },
+]
+
+[[package]]
 name = "asgi-lifespan"
 version = "2.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -37,6 +50,15 @@ wheels = [
 ]
 
 [[package]]
+name = "asgi-lifespan-middleware"
+version = "0.1.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/af/14/e413ef0ed1878a6c84296dd9103653eb9a838a6196acb98d21ec52b059ce/asgi_lifespan_middleware-0.1.3.tar.gz", hash = "sha256:88adb5932e90e47f8a1ac075ce974c39e39def90b99edb43801732102ae5d132", size = 4672, upload-time = "2022-10-27T03:16:28.497Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/65/0c/8776c4453a002bf9476c5aafac520c14c5046288190ff34b58f68857138c/asgi_lifespan_middleware-0.1.3-py3-none-any.whl", hash = "sha256:c36734c0bc33f416621ed050c092391b89f0c312b462976d7536e2be941d780d", size = 5033, upload-time = "2022-10-27T03:16:26.905Z" },
+]
+
+[[package]]
 name = "asgi-matomo"
 version = "0.7.0"
 source = { editable = "." }
@@ -44,6 +66,11 @@ dependencies = [
     { name = "asgiref" },
     { name = "httpx2", extra = ["http2"] },
     { name = "matomo-core" },
+]
+
+[package.optional-dependencies]
+background = [
+    { name = "asgi-background" },
 ]
 
 [package.dev-dependencies]
@@ -68,10 +95,12 @@ docs = [
 
 [package.metadata]
 requires-dist = [
+    { name = "asgi-background", marker = "extra == 'background'", specifier = ">=0.2.2" },
     { name = "asgiref", specifier = ">=3.6.0" },
     { name = "httpx2", extras = ["http2"], specifier = ">=2.12.0" },
     { name = "matomo-core", specifier = ">=0.3.4" },
 ]
+provides-extras = ["background"]
 
 [package.metadata.requires-dev]
 dev = [

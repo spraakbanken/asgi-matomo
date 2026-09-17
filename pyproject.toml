@@ -36,6 +36,11 @@ dependencies = [
 homepage = "https://spraakbanken.gu.se"
 repository = "https://github.com/spraakbanken/asgi-matomo"
 
+[project.optional-dependencies]
+background = [
+  "asgi-background>=0.2.2",
+]
+
 [dependency-groups]
 dev = [
   "asgi-lifespan>=2.1.0",
