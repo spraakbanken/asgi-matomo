@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 import time
 import typing as t
@@ -60,12 +61,6 @@ def create_app(
     app = Starlette()
 
     if use_middleware:
-        if use_background:
-            from asgi_matomo.background import (  # noqa: PLC0415
-                BackgroundTaskMiddleware,
-            )
-
-            app.add_middleware(BackgroundTaskMiddleware)
         app.add_middleware(
             MatomoMiddleware,
             client=matomo_client,
@@ -78,6 +73,12 @@ def create_app(
             allowed_methods=["GET", "PoST", "HEAD", "OPTIONS"],
             ignored_methods=["OptiOns"],
         )
+        if use_background:
+            from asgi_matomo.background import (  # noqa: PLC0415
+                BackgroundTaskMiddleware,
+            )
+
+            app.add_middleware(BackgroundTaskMiddleware)
 
     def foo(_request: Request) -> PlainTextResponse:
         return PlainTextResponse("foo")
@@ -265,14 +266,17 @@ async def test_matomo_client_gets_called_on_get_foo(
 @pytest.mark.asyncio
 async def test_matomo_client_with_background_gets_called_on_get_foo(
     client_w_background: AsyncClient,
+    matomo_client: mock.AsyncMock,
+    snapshot_json: SnapshotAssertion,
 ) -> None:
     # We only test that this call works
     response = await client_w_background.get("/foo")
     assert response.status_code == 200
 
-    # matomo_client.post.assert_awaited()
+    await asyncio.sleep(0.1)
+    matomo_client.post.assert_awaited()
 
-    # assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher())
+    assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher())
 
 
 @pytest.mark.asyncio
