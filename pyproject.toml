@@ -25,7 +25,11 @@ classifiers = [
   "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = ["asgiref>=3.6.0", "httpx>=0.24", "matomo-core>=0.3.4"]
+dependencies = [
+  "asgiref>=3.6.0",
+  "httpx2[http2]>=2.12.0",
+  "matomo-core>=0.3.4",
+]
 
 [project.urls]
 "Bug Tracker" = "https://github.com/spraakbanken/asgi-matomo/issues"
@@ -39,8 +43,8 @@ dev = [
   "pytest-asyncio>=0.25.3",
   "pytest-cov>=6.0.0",
   "ruff>=0.16.6",
-  "starlette>=0.46.1",
-  "syrupy>=4.9.0",
+  "starlette>=1.6.0",
+  "syrupy>=6.0.0",
   "ty>=0.0.20",
 ]
 docs = [

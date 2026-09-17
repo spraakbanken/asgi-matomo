@@ -9,6 +9,6 @@
   "rec": "1",
   "send_image": "0",
   "token_auth": "FAKE-TOKEN",
-  "ua": "b'python-httpx/0.28.1'",
+  "ua": "bytes",
   "url": "https://testserver/foo"
 }
