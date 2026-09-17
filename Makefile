@@ -134,7 +134,7 @@ prepare-release: update-changelog tests/requirements-testing.lock
 
 # we use lock extension so that dependabot doesn't pick up changes in this file
 tests/requirements-testing.lock: pyproject.toml
-	uv export --dev --format requirements-txt --no-hashes --no-emit-project --output-file --all-extras $@
+	uv export --dev --format requirements-txt --no-hashes --no-emit-project --all-extras --output-file  $@
 
 .PHONY: update-changelog
 ## update changelog from git history

@@ -5,6 +5,144 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased]
+
+### Added
+
+- Call matomo in background if asgi-background is installed by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Documentation
+
+- Add info about background tasks by [@kod-kristoff](https://github.com/kod-kristoff)
+
+## [0.7.1] - 2026-09-17
+
+### Changed
+
+- Use import httpx2 as httpx by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Documentation
+
+- Format Python code in README.md by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Fixed
+
+- Make default http client follow redirects by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Internal
+
+- Use httpx2 by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Removed
+
+- _(deps)_ Remove httpx by [@kod-kristoff](https://github.com/kod-kristoff)
+- Remove pre-commit step by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Build
+
+- _(deps-dev)_ Bump starlette from 0.52.1 to 1.6.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps-dev)_ Bump mkdocs-material from 9.7.3 to 9.7.7 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump idna from 3.11 to 3.15 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump actions/setup-python from 6.3.0 to 7.0.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump pypa/gh-action-pypi-publish from 1.14.0 to 1.14.2 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump re-actors/alls-green from 1.2.2 to 1.3.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump astral-sh/setup-uv from 8.2.0 to 10.0.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump actions/checkout from 7.0.0 to 7.0.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump j178/prek-action from 2.0.5 to 3.0.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump astral-sh/setup-uv from 8.1.0 to 8.2.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump actions/checkout from 6.0.2 to 7.0.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump j178/prek-action from 2.0.4 to 2.0.5 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump actions/setup-python from 6.2.0 to 6.3.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump codecov/codecov-action from 6.0.1 to 7.0.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump actions/upload-artifact from 7.0.0 to 7.0.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump astral-sh/setup-uv from 8.0.0 to 8.1.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump rmuir/uv-dependency-submission from 1.0.1 to 1.1.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump j178/prek-action from 2.0.2 to 2.0.4 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump codecov/codecov-action from 6.0.0 to 6.0.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump j178/prek-action from 2.0.1 to 2.0.2 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump pypa/gh-action-pypi-publish from 1.13.0 to 1.14.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump rmuir/uv-dependency-submission from 1.0.0 to 1.0.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump codecov/codecov-action from 5.5.2 to 6.0.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump astral-sh/setup-uv from 7.6.0 to 8.0.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump actions/download-artifact from 8.0.0 to 8.0.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump j178/prek-action from 1.1.1 to 2.0.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump astral-sh/setup-uv from 7.3.1 to 7.6.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump actions/upload-artifact from 6.0.0 to 7.0.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump astral-sh/setup-uv from 7.3.0 to 7.3.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+
+## [unreleased]
+
+### Added
+
+- Call matomo in background if asgi-background is installed by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Documentation
+
+- Add info about background tasks by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Internal
+
+- Also verify background call gets made by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Removed
+
+- Remove ruff.preview = true, update codes by [@kod-kristoff](https://github.com/kod-kristoff)
+
+## [0.7.1] - 2026-09-17
+
+### Changed
+
+- Use import httpx2 as httpx by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Documentation
+
+- Format Python code in README.md by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Fixed
+
+- Make default http client follow redirects by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Internal
+
+- Use httpx2 by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Removed
+
+- _(deps)_ Remove httpx by [@kod-kristoff](https://github.com/kod-kristoff)
+- Remove pre-commit step by [@kod-kristoff](https://github.com/kod-kristoff)
+
+### Build
+
+- _(deps-dev)_ Bump starlette from 0.52.1 to 1.6.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps-dev)_ Bump mkdocs-material from 9.7.3 to 9.7.7 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump idna from 3.11 to 3.15 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump actions/setup-python from 6.3.0 to 7.0.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump pypa/gh-action-pypi-publish from 1.14.0 to 1.14.2 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump re-actors/alls-green from 1.2.2 to 1.3.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump astral-sh/setup-uv from 8.2.0 to 10.0.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump actions/checkout from 7.0.0 to 7.0.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump j178/prek-action from 2.0.5 to 3.0.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump astral-sh/setup-uv from 8.1.0 to 8.2.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump actions/checkout from 6.0.2 to 7.0.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump j178/prek-action from 2.0.4 to 2.0.5 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump actions/setup-python from 6.2.0 to 6.3.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump codecov/codecov-action from 6.0.1 to 7.0.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump actions/upload-artifact from 7.0.0 to 7.0.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump astral-sh/setup-uv from 8.0.0 to 8.1.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump rmuir/uv-dependency-submission from 1.0.1 to 1.1.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump j178/prek-action from 2.0.2 to 2.0.4 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump codecov/codecov-action from 6.0.0 to 6.0.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump j178/prek-action from 2.0.1 to 2.0.2 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump pypa/gh-action-pypi-publish from 1.13.0 to 1.14.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump rmuir/uv-dependency-submission from 1.0.0 to 1.0.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump codecov/codecov-action from 5.5.2 to 6.0.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump astral-sh/setup-uv from 7.6.0 to 8.0.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump actions/download-artifact from 8.0.0 to 8.0.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump j178/prek-action from 1.1.1 to 2.0.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump astral-sh/setup-uv from 7.3.1 to 7.6.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump actions/upload-artifact from 6.0.0 to 7.0.0 by [@dependabot[bot]](https://github.com/dependabot[bot])
+- _(deps)_ Bump astral-sh/setup-uv from 7.3.0 to 7.3.1 by [@dependabot[bot]](https://github.com/dependabot[bot])
+
 ## [0.7.1] - 2026-09-17
 
 ### Changed
