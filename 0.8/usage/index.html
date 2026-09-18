@@ -623,7 +623,7 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 </div>
-<p>If you are running your ASGI app with <code>gunicorn</code>, you need to use <a href="#Make tracking calls in background">the <code>background</code> feature</a>.</p>
+<p>If you are running your ASGI app with <code>gunicorn</code>, you need to use <a href="#make-tracking-calls-in background">the <code>background</code> feature</a>.</p>
 <h3 id="make-tracking-calls-in-background">Make tracking calls in background<a class="headerlink" href="#make-tracking-calls-in-background" title="Permanent link">&para;</a></h3>
 <p>To use the <code>background</code> feature, first ensure that you added <code>asgi-matomo[background]</code> to your project.</p>
 <p>Then add both <code>asgi_matomo.MatomoMiddleware</code> and <code>asgi_matomo.background.BackgroundTaskMiddleware</code>:</p>
