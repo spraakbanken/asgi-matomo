@@ -381,6 +381,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#make-tracking-calls-in-background" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Make tracking calls in background
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -512,6 +529,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#make-tracking-calls-in-background" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Make tracking calls in background
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -547,8 +581,15 @@
 
 <h1 id="getting-started">Getting started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h1>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<p>To use <code>asgi-matomo</code> in your project, use your package manager (here using <a href="https://docs.astral.sh/uv"><code>uv</code></a>):</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>add<span class="w"> </span>asgi-matomo
+<span class="c1"># or, if you want to run asgi-matomo in the background</span>
+uv<span class="w"> </span>add<span class="w"> </span><span class="s2">&quot;asgi-matomo[background]&quot;</span>
+</code></pre></div>
 <p>To install <code>asgi-matomo</code>:</p>
 <div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>asgi-matomo
+<span class="c1"># or, if you want to run asgi-matomo in the background</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;asgi-matomo[background]&quot;</span>
 </code></pre></div>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
 <p>To use the <code>MatomoMiddleware</code> with, for instance <a href="https://starlette.io">Starlette</a>, simply:</p>
@@ -579,6 +620,43 @@
 <span class="p">)</span>
 </code></pre></div>
 <p>This will track all requests made to your service.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+</div>
+<p>If you are running your ASGI app with <code>gunicorn</code>, you need to use <a href="index#Make tracking calls in background">the <code>background</code> feature</a>.</p>
+<h3 id="make-tracking-calls-in-background">Make tracking calls in background<a class="headerlink" href="#make-tracking-calls-in-background" title="Permanent link">&para;</a></h3>
+<p>To use the <code>background</code> feature, first ensure that you added <code>asgi-matomo[background]</code> to your project.</p>
+<p>Then add both <code>asgi_matomo.MatomoMiddleware</code> and <code>asgi_matomo.background.BackgroundTaskMiddleware</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;Example showing minimal usage.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.applications</span><span class="w"> </span><span class="kn">import</span> <span class="n">Starlette</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.middleware</span><span class="w"> </span><span class="kn">import</span> <span class="n">Middleware</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.requests</span><span class="w"> </span><span class="kn">import</span> <span class="n">Request</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.routing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Route</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">asgi_matomo</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatomoMiddleware</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">asgi_matomo.background</span><span class="w"> </span><span class="kn">import</span> <span class="n">BackgroundTaskMiddleware</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">homepage</span><span class="p">(</span><span class="n">_request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSONResponse</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">({</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="mi">4000</span><span class="p">})</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Starlette</span><span class="p">(</span>
+    <span class="n">routes</span><span class="o">=</span><span class="p">[</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="n">homepage</span><span class="p">)],</span>
+    <span class="n">middleware</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">Middleware</span><span class="p">(</span>
+            <span class="n">MatomoMiddleware</span><span class="p">,</span>
+            <span class="n">matomo_url</span><span class="o">=</span><span class="s2">&quot;YOUR MATOMO TRACKING URL&quot;</span><span class="p">,</span>
+            <span class="n">idsite</span><span class="o">=</span><span class="mi">12345</span><span class="p">,</span>  <span class="c1"># your service tracking id</span>
+        <span class="p">),</span>
+        <span class="n">Middleware</span><span class="p">(</span><span class="n">BackgroundTaskMiddleware</span><span class="p">),</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>This will track all requests made to your service and all tracking calls will be
+made in the background.</p>
 <h2 id="what-is-tracked">What is tracked?<a class="headerlink" href="#what-is-tracked" title="Permanent link">&para;</a></h2>
 <p>Currently <code>asgi-matomo</code> tracks the following variables:</p>
 <ul>
