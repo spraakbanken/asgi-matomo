@@ -38,7 +38,7 @@ jobs:
           submodules: true
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # 10.2.0
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # 10.3.2
         with:
           version: ${{ env.UV_VERSION }}
           enable-cache: true
@@ -85,7 +85,7 @@ jobs:
 
       - name: Set up uv
         if: hashFiles('uv.lock') != ''
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # 10.2.0
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # 10.3.2
         with:
           version: ${{ env.UV_VERSION }}
           enable-cache: true
