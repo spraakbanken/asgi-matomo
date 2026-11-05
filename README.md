@@ -40,6 +40,9 @@ Alternative with the `background` extra:
 uv add 'asgi-matomo[background]'
 ```
 
+> [!WARNING]
+> If you use `gunicorn` to serve your ASGI app, then you need to use the `background` feature.
+
 ## What is tracked
 
 Currently this middleware tracks:

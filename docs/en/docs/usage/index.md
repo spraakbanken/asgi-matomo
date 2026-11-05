@@ -2,10 +2,20 @@
 
 ## Installation
 
+To use `asgi-matomo` in your project, use your package manager (here using [`uv`](https://docs.astral.sh/uv)):
+
+```bash
+uv add asgi-matomo
+# or, if you want to run asgi-matomo in the background
+uv add "asgi-matomo[background]"
+```
+
 To install `asgi-matomo`:
 
 ```bash
 pip install asgi-matomo
+# or, if you want to run asgi-matomo in the background
+pip install "asgi-matomo[background]"
 ```
 
 ## Usage
@@ -17,6 +27,22 @@ To use the `MatomoMiddleware` with, for instance [Starlette](https://starlette.i
 ```
 
 This will track all requests made to your service.
+
+!!! warning
+If you are running your ASGI app with `gunicorn`, you need to use [the `background` feature](<#make-tracking-calls-in background>).
+
+### Make tracking calls in background
+
+To use the `background` feature, first ensure that you added `asgi-matomo[background]` to your project.
+
+Then add both `asgi_matomo.MatomoMiddleware` and `asgi_matomo.background.BackgroundTaskMiddleware`:
+
+```python
+{!../../../docs_src/usage/tutorial002.py!}
+```
+
+This will track all requests made to your service and all tracking calls will be
+made in the background.
 
 ## What is tracked?
 
