@@ -326,11 +326,11 @@ class MatomoMiddleware:
         )
         url = urllib.parse.urlunsplit(
             (
-                "https" if self.assume_https else str(scope["scheme"]),
+                "https" if self.assume_https else scope["scheme"],
                 server,
                 path,
+                scope["query_string"].decode() if scope.get("query_string") else None,
                 "",
-                str(scope["query_string"]) if scope.get("query_string") else None,
             )
         )
 
