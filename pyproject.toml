@@ -32,9 +32,9 @@ dependencies = [
 ]
 
 [project.urls]
-"Bug Tracker" = "https://github.com/spraakbanken/asgi-matomo/issues"
-homepage = "https://spraakbanken.gu.se"
-repository = "https://github.com/spraakbanken/asgi-matomo"
+Homepage = "https://spraakbanken.gu.se"
+Issues = "https://github.com/spraakbanken/asgi-matomo/issues"
+Repository = "https://github.com/spraakbanken/asgi-matomo"
 
 [project.optional-dependencies]
 background = [
