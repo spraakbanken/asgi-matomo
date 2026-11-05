@@ -11,8 +11,8 @@ permissions:
   contents: read
 
 env:
-  MINIMUM_PYTHON_VERSION: "3.10"
-  UV_VERSION: "0.12.9"
+  MINIMUM_PYTHON_VERSION: "3.11"
+  UV_VERSION: "0.12.20"
 
 # If new code is pushed to a PR branch, then cancel in progress workflows for that PR. Ensures that
 # we don't waste CI time, and returns results quicker https://github.com/jonhoo/rust-ci-conf/pull/5
@@ -23,7 +23,7 @@ concurrency:
 jobs:
   fmt:
     runs-on: ubuntu-latest
-    name: ubuntu / 3.10 / fmt
+    name: ubuntu / 3.11 / fmt
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5.0.0
         with:
@@ -31,7 +31,7 @@ jobs:
           submodules: true
 
       - name: Set up the python ${{ env.MINIMUM_PYTHON_VERSION }}
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         id: setup-python
         with:
           python-version: ${{ env.MINIMUM_PYTHON_VERSION }}
@@ -40,7 +40,7 @@ jobs:
       #  -----  setup uv and load cache   -----
       #----------------------------------------------
       - name: Set up uv
-        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # 10.0.1
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # 10.3.2
         with:
           version: ${{ env.UV_VERSION }}
           enable-cache: true
@@ -53,14 +53,14 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
-    name: ubuntu / 3.10 / lint
+    name: ubuntu / 3.11 / lint
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5.0.0
         with:
           persist-credentials: false
           submodules: true
       - name: Set up the python ${{ env.MINIMUM_PYTHON_VERSION }}
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         id: setup-python
         with:
           python-version: ${{ env.MINIMUM_PYTHON_VERSION }}
@@ -69,7 +69,7 @@ jobs:
       #  -----  setup uv and load cache   -----
       #----------------------------------------------
       - name: Set up uv
-        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # 10.0.1
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # 10.3.2
         with:
           version: ${{ env.UV_VERSION }}
           enable-cache: true
@@ -82,14 +82,14 @@ jobs:
 
   type-check:
     runs-on: ubuntu-latest
-    name: ubuntu / 3.10 / type-check
+    name: ubuntu / 3.11 / type-check
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5.0.0
         with:
           persist-credentials: false
           submodules: true
       - name: Set up the python ${{ env.MINIMUM_PYTHON_VERSION }}
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         id: setup-python
         with:
           python-version: ${{ env.MINIMUM_PYTHON_VERSION }}
@@ -98,7 +98,7 @@ jobs:
       #  -----  setup uv and load cache   -----
       #----------------------------------------------
       - name: Set up uv
-        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # 10.0.1
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # 10.3.2
         with:
           version: ${{ env.UV_VERSION }}
           enable-cache: true
@@ -109,6 +109,22 @@ jobs:
       - name: type-check code
         run: make type-check
 
+  pre-commit:
+    name: ubuntu / 3.11 / pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5.0.0
+        with:
+          persist-credentials: false
+          submodules: true
+      - name: Set up the python ${{ env.MINIMUM_PYTHON_VERSION }}
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        id: setup-python
+        with:
+          python-version: ${{ env.MINIMUM_PYTHON_VERSION }}
+      - name: prek run
+        uses: j178/prek-action@44924fe9ef4a6f88253c4b6b1bf11c689d3ce53d # v3.1.0
+
   # https://github.com/marketplace/actions/alls-green#why used for branch protection checks
   check-check:
     if: always()
@@ -116,6 +132,7 @@ jobs:
       - fmt
       - lint
       - type-check
+      - pre-commit
     runs-on: ubuntu-latest
     permissions: {}
     steps:
