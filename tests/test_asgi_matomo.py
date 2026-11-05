@@ -250,6 +250,20 @@ async def test_middleware_tracks_urlref(
 
 
 @pytest.mark.asyncio
+async def test_middleware_tracks_query_string(
+    client: AsyncClient, matomo_client: mock.AsyncMock, snapshot_json: SnapshotAssertion
+) -> None:
+    response = await client.get(
+        "/foo?query=string string", headers={"referer": "https://example.com"}
+    )
+    assert response.status_code == 200
+
+    matomo_client.post.assert_awaited()
+
+    assert matomo_client.post.await_args.kwargs["data"] == snapshot_json(matcher=make_matcher())
+
+
+@pytest.mark.asyncio
 async def test_matomo_client_gets_called_on_get_foo(
     client: AsyncClient,
     matomo_client: mock.AsyncMock,
