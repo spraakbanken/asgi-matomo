@@ -21,8 +21,8 @@ repos:
             "--format=requirements-txt",
             "--no-hashes",
             "--no-emit-project",
-            "--output-file=tests/requirements-testing.lock",
             "--all-extras",
+            "--output-file=tests/requirements-testing.lock",
           ]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
