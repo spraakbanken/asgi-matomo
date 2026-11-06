@@ -1,13 +1,12 @@
 # asgi-matomo
 
-[![PyPI version](https://img.shields.io/pypi/v/asgi-matomo.svg?style=flat-square&colorB=dfb317)](https://pypi.org/project/asgi-matomo/)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/asgi-matomo)
-[![PyPI - Downloads](https://img.shields.io/pypi/dm/asgi-matomo)](https://pypi.org/project/asgi-matomo/)
+[![PyPI version](https://img.shields.io/pypi/v/asgi-matomo.svg)](https://pypi.org/project/asgi-matomo/)
+[![PyPI license](https://img.shields.io/pypi/l/asgi-matomo.svg)](https://pypi.org/project/asgi-matomo/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/asgi-matomo.svg)](https://pypi.org/project/asgi-matomo)
 [![Docs](https://img.shields.io/badge/docs-here-red.svg?style=flat-square)](https://spraakbanken.github.io/asgi-matomo/)
-![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)
 
 [![Maturity badge - level 3](https://img.shields.io/badge/Maturity-Level%203%20--%20Stable-green.svg)](https://github.com/spraakbanken/getting-started/blob/main/scorecard.md)
-[![Stage](https://img.shields.io/pypi/status/asgi-matomo)](https://pypi.org/project/asgi-matomo/)
+[![Stage](https://img.shields.io/pypi/status/asgi-matomo.svg)](https://pypi.org/project/asgi-matomo/)
 
 [![Code Coverage](https://codecov.io/gh/spraakbanken/asgi-matomo/branch/main/graph/badge.svg)](https://codecov.io/gh/spraakbanken/asgi-matomo/)
 
@@ -258,7 +257,7 @@ app.add_middleware(
 - [x] _filtering tracked of urls_
 - [x] _custom extraction of tracked data_
 
-This project keeps a [changelog](https://github.com/spraakbanken/asgi-matomo/CHANGELOG.md).
+This project keeps a [changelog](./CHANGELOG.md).
 
 ## Development
 
