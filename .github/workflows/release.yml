@@ -52,6 +52,14 @@ jobs:
           version: ${{ env.UV_VERSION }}
           enable-cache: true
 
+      #---------------------------------------------
+      #  ---- prepare README.md if scripts/transform_readme.py exists
+      #---------------------------------------------
+      - name: Prepare README.md
+        if: hashFiles('scripts/transform_readme.py') != ''
+        run: |
+          python scripts/transform_readme.py --target pypi
+          cat README.md
       #----------------------------------------------
       #  -----  build distribution -----
       #----------------------------------------------
